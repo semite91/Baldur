@@ -1,0 +1,24 @@
+TEST RESULTS - T1 Env/camera spike (issue #2)
+Scenarios: infrastructure/test/test_scenarios_2026_09_24_19_46.txt (10 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/ -v
+Date: 2026-09-24 20:54 local
+
+11 passed, 0 failed (3 red-green cycles: error seam 2/2, frame loop 5/5, fps/versions/guard 4/4):
+- test_denied_camera_emits_single_error_event: PASS
+- test_stdout_lines_are_events_only: PASS
+- test_open_uses_source_zero: PASS
+- test_open_records_single_webcam_source: PASS
+- test_read_frame_returns_frame_with_shape: PASS
+- test_failed_open_raises_camera_error_and_releases: PASS
+- test_failed_read_raises_camera_error: PASS
+- test_fps_measured_from_real_timestamps: PASS
+- test_fps_zero_elapsed_returns_zero: PASS
+- test_pinned_versions_match_installed: PASS
+- test_camera_functions_write_no_files: PASS
+
+Audits:
+- nbformat.validate(00_env_camera.ipynb): clean, 5 cells
+- disk-write pattern scan (imwrite/VideoWriter/save/export): no matches
+- live camera source=0 on this machine: absent, error path is the live behavior
+
+SRS deltas (workflow step 8): none. All 10 scenarios pass, no changes required.

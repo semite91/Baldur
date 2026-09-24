@@ -1,0 +1,33 @@
+OPENCODE REVIEW - T1 Env/camera spike (issue #2)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: ocr delegate rule on notebooks/00_env_camera.ipynb, tests/nb_loader.py,
+  tests/test_env_camera.py (system rule group for py/ipynb)
+Date: 2026-09-24 23:37 local. Reviewer: host agent (delegation mode).
+
+FINDINGS
+- Blocking (correctness/security): NONE.
+- Non-blocking, deferred to T3 (event loop owns the frame lifecycle):
+  1. open_camera wraps only the isOpened()==False path. If the capture
+     factory itself raises (e.g. cv2.error), the raw exception propagates
+     instead of a CameraError. T3's loop must catch-all around open/read
+     and emit the frozen error event.
+  2. read_frame does not release the capture on failure; release ownership
+     stays with the T3 loop. Covered by T3 acceptance, not T1.
+- Considered and dismissed per rules (precision over recall):
+  - exec/compile in tests/nb_loader.py operates on the repo's own notebook
+    (trusted source, not attacker-controlled) -> not flagged.
+  - float == in test_fps_measured_from_real_timestamps uses the exact
+    literal 15.0 for 30/2.0 (exactly representable) from an independent
+    source -> not flagged.
+  - `is True` in test_failed_open_raises_camera_error_and_releases compares
+    against a singleton (sanctioned pattern) -> not flagged.
+- Housekeeping: removed tests/__pycache__ artifacts.
+
+VERIFY (workflow step 13 repeat)
+- B:\venvs\baldur\Scripts\python.exe -m pytest tests/: 11 passed, 0 failed.
+- nbformat.validate(notebooks/00_env_camera.ipynb): clean, 5 cells,
+  kernelspec baldur.
+- Headless kernel execution (nbconvert --execute): 5 cells, 0 error outputs.
+- Live notebook run by user: camera worked.
+
+SRS deltas (workflow step 8): none. No code changes required by review.

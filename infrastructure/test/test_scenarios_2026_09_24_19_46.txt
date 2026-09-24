@@ -1,0 +1,21 @@
+TEST SCENARIOS - T1 Env/camera spike (issue #2)
+Scope: camera intake only (Recognition, CONTEXT.md vocabulary).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+ENV SPIKE (live run, 2026-09-24):
+- ultralytics 8.4.161, torch 2.14.0+cpu, opencv 5.0.0, numpy 2.4.6
+- venv: B:\venvs\baldur (C: has <1GB free; torch/ultralytics do not fit on C:)
+- camera source=0 on this machine: NOT present (cap.isOpened() == False)
+
+SCENARIOS (fakes/mocks in pytest; live run where hardware allows):
+1. check camera permission -> reports granted/denied, never hangs
+2. open single webcam source=0 -> streaming handle acquired
+3. read one frame from stream -> frame delivered with height/width/channels
+4. denied camera -> emits exactly one error event (machine-readable code + message)
+5. stream failure mid-run -> emits error event, releases handle, no hang
+6. release camera handle -> resource freed after loop/error
+7. measure FPS over N frames -> FPS value reported from real timestamps
+8. report pinned versions -> ultralytics/torch/opencv/numpy versions recorded
+9. run writes no files -> no images, video, keypoints, or scores persisted
+10. stdout carries only error events on failure paths -> no stray logs/debug prints
