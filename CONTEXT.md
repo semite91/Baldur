@@ -13,7 +13,7 @@ YOLO pose outputs per person (`xy`, `xyn`, `data` with visibility).
 _Avoid_: landmarks, joints, skeleton
 
 **Posture score**:
-A 0-100 number from ear-shoulder verticality plus shoulder symmetry where higher means more upright.
+A 0-100 number from neck verticality plus head pitch plus shoulder symmetry plus an experimental shoulder-posture proxy, computed in aspect-corrected space, where higher means more upright.
 _Avoid_: confidence, probability, health score
 
 **Valid range**:
