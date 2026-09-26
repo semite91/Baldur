@@ -1,0 +1,23 @@
+TEST RESULTS ADDENDUM 2 - T2 aspect-ratio revision (issue #3)
+Requirement: user review of _side_verticality; approved revision plan 2026-09-26.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-26 23:40 local
+
+31 passed, 0 failed (11 T1 + 20 T2):
+- test_aspect_correction_recovers_true_score: PASS (corrected == true within 1e-9)
+- test_uncorrected_wide_aspect_under_reads_lean: PASS (buggy cosine above true;
+  first aggregate form disproved by run: width compression also moves symmetry
+  and proxy terms, so the pin isolates the neck term)
+- test_invalid_aspect_raises: PASS
+- All 28 pre-existing tests: PASS (default aspect=1.0 preserves fixtures)
+
+Change: posture_score(xyn, visibility, aspect=1.0); x scaled once into
+aspect-corrected space; ValueError on aspect <= 0; header documents contract.
+T3 must pass frame W/H (recorded for 02_events_jsonl).
+
+Audits:
+- nbformat.validate(01_pose_score.ipynb): clean
+- Headless kernel execution: 0 error outputs
+
+SRS deltas (workflow step 8): none new. Standing item: CONTEXT.md posture-score
+line needs v1.1 update at T2 close-out (formula now neck+head-pitch+symmetry+proxy).

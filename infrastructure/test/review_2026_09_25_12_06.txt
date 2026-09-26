@@ -1,0 +1,33 @@
+OPENCODE REVIEW - T2 Pose scoring calibration (issue #3)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: ocr delegate rule on notebooks/01_pose_score.ipynb, tests/test_pose_score.py
+  (system rule group for py/ipynb)
+Date: 2026-09-25 12:06 local. Reviewer: host agent (delegation mode).
+
+FINDINGS
+- Blocking: 1 real defect, FIXED test-first.
+  Predicates returned numpy.bool_ (not Python bool) for numpy scalar scores:
+  `True and np.True_` yields np.True_, so `is True` checks fail. Real risk at
+  the T3 boundary where scores cross torch->numpy as numpy scalars.
+  Fix: wrap both predicates in bool(); added
+  test_predicates_return_python_bools_for_numpy_scalars (was RED, now green).
+  Also recorded input shape + "Consumed by T3" in the three T3-bound
+  docstrings (select_largest_person, is_upright, is_recovered).
+- Non-blocking: none applied.
+- Considered and dismissed per rules (precision over recall):
+  - float == 100.0 fallback test: bitwise-exact IEEE arithmetic (identical
+    numerator/denominator floats -> ratio exactly 1.0), deterministic.
+  - exec/compile in tests/nb_loader.py: trusted repo notebook source.
+  - posture_score input shape (17,2)/(17,) enforced by caller contract
+    (T3 tensor slicing); no guard added, no test invented for it.
+  - max() on empty guarded by `if not persons`; all divisions guarded.
+
+VERIFY (workflow step 13 repeat)
+- B:\venvs\baldur\Scripts\python.exe -m pytest tests/: 28 passed, 0 failed.
+- nbformat.validate(01_pose_score.ipynb): clean, 4 cells.
+- Headless kernel execution: 0 error outputs.
+- tests/__pycache__ removed.
+
+SRS deltas (workflow step 8): none beyond the already-recorded v1 formula
+extension (see test_results_2026_09_25_11_59.txt: CONTEXT.md posture-score
+line needs a v1.1 update at close-out).

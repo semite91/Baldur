@@ -1,0 +1,23 @@
+TEST SCENARIOS - T2 Pose scoring calibration (issue #3)
+Scope: scoring only (Recognition, CONTEXT.md vocabulary).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+MODEL SPIKE (live run, 2026-09-25):
+- yolo26n-pose.pt loads (7.5MB, kept at B:\baldur-models, out of repo)
+- keypoints.xy (N,17,2) pixels, xyn (N,17,2) normalized, data (N,17,3) x,y,visibility
+- COCO-17 order confirmed on bus.jpg (5 persons): ears 3,4; shoulders 5,6
+- score fn takes numpy (17,2) xyn + (17,) visibility; torch conversion at call edge
+
+SCENARIOS (synthetic numpy fixtures in pytest; live captures where useful):
+1. build upright fixture -> score at or above 70
+2. build slouched fixture -> score below 70
+3. build asymmetric-shoulders fixture -> scores below symmetric counterpart
+4. score every fixture incl. extremes -> result always within 0-100
+5. hide ears and shoulders -> score None (indeterminate, hold last state)
+6. set visibility below floor -> score None (never a posture signal)
+7. present two persons -> largest box area selected for scoring
+8. present single person -> selected trivially
+9. present empty frame -> None, never a bad-posture signal
+10. feed score 70+ -> upright predicate true; feed 80+ -> recovered predicate true
+11. record calibrated weights -> verticality/symmetry weights documented in notebook

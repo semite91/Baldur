@@ -1,0 +1,21 @@
+TEST SCENARIOS ADDENDUM - T2 head-pitch + shoulder-posture (issue #3)
+Extends: infrastructure/test/test_scenarios_2026_09_25_00_29.txt (11 scenarios, confirmed).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+DESIGN (approved 2026-09-25):
+- head-pitch term: (y_nose - y_eyes_mid) / torso-normalized head size -> 0-1 via
+  PITCH_REF; visibility-gated, drops out (renormalized) when unseen.
+- shoulder-posture proxy: shoulder-width / torso-length (shoulder-mid to hip-mid)
+  ratio; EXPERIMENTAL, small weight, live calibration required.
+- Rebalance: neck 0.5 / head-pitch 0.25 / symmetry 0.15 / shoulder-posture 0.10
+  (constants calibrated against fixtures in execution).
+- Existing fixtures gain nose/eye/hip coordinates (currently (0,0)).
+
+SCENARIOS:
+12. build bowed-head fixture (ears above shoulders, nose dropped) -> scores below upright counterpart
+13. hide nose and eyes -> pitch term drops out, score still computed from neck+symmetry
+14. build hunched-shoulders fixture (narrowed width, level) -> scores below upright
+15. rebalance weights -> all 13 existing tests still green, upright>=70 and slouch<70 hold
+16. feed extremes incl. new terms -> result always within 0-100
+17. document limits -> notebook header records frontal-2D limits (no yaw gaze, experimental proxy) + open live-tuning knobs

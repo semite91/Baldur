@@ -1,0 +1,27 @@
+TEST RESULTS - T2 Pose scoring calibration (issue #3)
+Scenarios: infrastructure/test/test_scenarios_2026_09_25_00_29.txt (11 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-25 03:11 local
+
+24 passed, 0 failed (11 T1 + 13 T2, 2 red-green cycles on score/selection):
+- test_upright_scores_at_or_above_70: PASS (fixture scores 100.0)
+- test_slouched_scores_below_70: PASS
+- test_asymmetric_scores_below_symmetric: PASS (85.0 < 100.0)
+- test_scores_within_0_to_100: PASS
+- test_hidden_ears_and_shoulders_scores_none: PASS
+- test_low_visibility_scores_none: PASS
+- test_single_hidden_ear_still_scores: PASS
+- test_single_person_selected_trivially: PASS
+- test_largest_person_selected: PASS
+- test_empty_frame_selects_none: PASS
+- test_upright_predicate_boundary: PASS (70 -> True, 69.9 -> False)
+- test_recovered_predicate_boundary: PASS (80 -> True, 79.9 -> False)
+- test_none_score_is_neither_upright_nor_recovered: PASS
+
+Audits:
+- nbformat.validate(01_pose_score.ipynb): clean, 4 cells
+- Headless kernel execution: 0 error outputs
+- disk-write pattern scan (notebooks): no matches
+- Calibration recorded in notebook: weights 0.7/0.3, visibility floor 0.5
+
+SRS deltas (workflow step 8): none. All 11 scenarios pass, no changes required.

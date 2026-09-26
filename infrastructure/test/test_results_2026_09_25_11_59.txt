@@ -1,0 +1,24 @@
+TEST RESULTS ADDENDUM - T2 head-pitch + shoulder-posture (issue #3)
+Scenarios: infrastructure/test/test_scenarios_2026_09_25_11_55.txt (6 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-25 11:59 local
+
+27 passed, 0 failed (11 T1 + 16 T2):
+- test_bowed_head_scores_below_upright: PASS (75.0 < 100.0)
+- test_hidden_nose_and_eyes_falls_back: PASS (100.0, renormalized)
+- test_hunched_shoulders_score_below_upright: PASS (92.5 < 100.0)
+- All 13 pre-existing T2 tests: PASS (rebalance holds: upright 100.0, slouch ~51)
+
+Calibration applied: neck 0.5 / pitch 0.25 / symmetry 0.15 / posture-proxy 0.10,
+PITCH_OK 0.25, PITCH_REF 0.9, width ratios upright 0.5 / hunched 0.3.
+
+Audits:
+- nbformat.validate(01_pose_score.ipynb): clean, 4 cells
+- Headless kernel execution: 0 error outputs
+- disk-write pattern scan: no matches
+- Frontal-2D limits documented in notebook header (no yaw gaze, experimental proxy)
+
+SRS deltas (workflow step 8): score v1 formula extended (was neck+symmetry only);
+CONTEXT.md posture-score definition ("ear-shoulder verticality plus shoulder
+symmetry") now under-describes the implementation -> update CONTEXT.md or accept
+v1.1 wording at T2 close-out.
