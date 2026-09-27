@@ -1,0 +1,36 @@
+TEST RESULTS - T3 Event loop JSON-lines (issue #4)
+Scenarios: infrastructure/test/test_scenarios_2026_09_27_00_01.txt (11 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-27 01:31 local
+
+45 passed, 0 failed (11 T1 + 20 T2 + 14 T3, 2 cycles):
+- test_ten_seconds_below_70_emits_one_bad_posture: PASS (dwell_s 10)
+- test_nine_seconds_below_70_emits_no_state_events: PASS
+- test_twelve_seconds_below_70_still_single_bad_posture: PASS
+- test_upright_frames_emit_no_state_events: PASS
+- test_three_seconds_recovered_after_bad_emits_recovered: PASS (dwell_s 3)
+- test_partial_recovery_resets_clock: PASS (stays bad, clock zeroed)
+- test_none_freezes_dwell_clocks: PASS (6s held, resume fires at total 10s)
+- test_heartbeat_every_five_seconds_with_last_score: PASS (2 beats, score 72)
+- test_heartbeat_before_first_score_carries_null: PASS
+- test_failed_frame_emits_frozen_error_event: PASS (UPDATE_FAILED, stdout line)
+- test_error_event_preserves_machine_code: PASS (CAMERA_UNAVAILABLE preserved)
+- test_thresholds_mirror_scoring_notebook: PASS (70/80 pinned across notebooks)
+- test_scripted_run_stdout_parses_as_frozen_events_only: PASS (bad+recovered+heartbeat)
+- test_largest_person_drives_state_machine: PASS (live 01 fns feed 02 update)
+
+Process notes (honest record):
+- Cycle 1 RED was the collection error (no notebook); cycle-2 tests passed on
+  first run against the cycle-1 machine (design-complete from confirmed
+  scenarios), so cycle 2 was specification-first rather than strictly red-first.
+- Scenario 2 wording ("zero events") corrected in tests: heartbeat still flows
+  every 5s per scenario 7; the assertion is state-event silence (no
+  bad_posture/recovered). Scenario file kept verbatim as audit trail.
+
+Audits:
+- nbformat.validate(02_events_jsonl.ipynb): clean, 3 cells
+- Headless kernel execution: 0 error outputs
+- disk-write pattern scan: no matches (same sweep as T2)
+
+SRS deltas (workflow step 8): none. Thresholds mirror 01 (test-pinned);
+unification into engine.py plus emit_error/emit_event merge belong to T4.

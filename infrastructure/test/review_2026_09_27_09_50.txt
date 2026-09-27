@@ -1,0 +1,31 @@
+OPENCODE REVIEW - T3 Event loop JSON-lines (issue #4)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: ocr delegate rule on notebooks/02_events_jsonl.ipynb,
+  tests/test_events_jsonl.py (system rule group for py/ipynb)
+Date: 2026-09-27 09:50 local. Reviewer: host agent (delegation mode).
+
+FINDINGS
+- Blocking: NONE.
+- Non-blocking hygiene applied (test file only, zero production risk):
+  hoisted json import to top level (was repeated in 3 tests); replaced the
+  obscure generator-throw lambda with a plain failing function; dropped the
+  two `load_notebook as load` re-imports in favor of the top-level import.
+- Considered and dismissed per rules (precision over recall):
+  - broad `except Exception` in safe_update: required by the never-silent
+    contract at the frame boundary; narrows via exc.code with UPDATE_FAILED
+    fallback, never swallows (always emits).
+  - dwell_s emitted as float seconds accrued (10.0, not 10): valid JSON
+    number, numerically equal; exactness holds for whole-second dt.
+  - new_state returns a fresh dict per call: no shared-mutable-state issue.
+  - while-loop heartbeat catch-up always decreases hb_s: cannot hang on
+    finite dt (caller contract: wall-clock deltas).
+  - `is True` checks in tests compare against real bools (literals assigned
+    in new_state/update paths); numpy scores are compared, never identity-checked.
+
+VERIFY (workflow step 13 repeat)
+- B:\venvs\baldur\Scripts\python.exe -m pytest tests/: 45 passed, 0 failed.
+- nbformat.validate + headless execution: clean from the T3 loop verify
+  (notebook untouched by this review).
+- tests/__pycache__ removed.
+
+SRS deltas (workflow step 8): none.

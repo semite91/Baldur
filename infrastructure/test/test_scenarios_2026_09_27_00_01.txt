@@ -1,0 +1,30 @@
+TEST SCENARIOS - T3 Event loop JSON-lines (issue #4)
+Scope: dwell-time event loop only (Recognition, CONTEXT.md vocabulary).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+DESIGN (state machine, pure + time-injectable, dt seconds per frame):
+- update(state, score, dt) -> list of events; no wall-clock inside logic.
+- outside_time accrues while not upright; >= 10s and not in bad state ->
+  exactly one bad_posture (score + dwell_s); further slouch emits nothing.
+- in bad state: recovery_time accrues while recovered; >= 3s -> one recovered.
+- None score freezes both clocks (hold last state, never resets, never accrues).
+- heartbeat every 5s regardless of state, carrying last known score
+  (null before the first scored frame).
+- failures anywhere in open/read/score -> frozen error event, never silent.
+- stdout carries only the four frozen events (bad_posture/recovered/heartbeat/error).
+- consumed from T2: select_largest_person, is_upright, is_recovered.
+- frame aspect W/H passed to posture_score from the live frame shape.
+
+SCENARIOS (scripted score/dt sequences in pytest; live camera optional):
+1. feed 10s below 70 -> exactly one bad_posture with score and dwell_s
+2. feed 9s below 70 -> zero events (no flapping on partial slouch)
+3. feed 12s below 70 -> still exactly one bad_posture (no repeat)
+4. after bad_posture feed 3s at/above 80 -> exactly one recovered
+5. after bad_posture feed 2s at/above 80 then below 70 -> no recovered, clock reset
+6. feed None mid-slouch -> clocks freeze, no events, resume continues count
+7. feed any 5s span -> heartbeat emitted carrying last known score
+8. feed heartbeat before first scored frame -> heartbeat carries null score
+9. raise mid-update (failed read) -> frozen error event with code and message
+10. capture full stdout of a scripted run -> every line parses as one frozen event
+11. select largest person per frame -> its score drives the state machine
