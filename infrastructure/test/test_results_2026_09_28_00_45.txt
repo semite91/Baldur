@@ -1,0 +1,31 @@
+TEST RESULTS ADDENDUM - example-driven setup hardening (issue #6)
+Scenarios: infrastructure/test/test_scenarios_2026_09_28_00_34.txt (9 atomic)
+Reference: YOLOv9+Hydra/ByteTrack vehicle pipeline, re-checked against
+installed ultralytics 8.4.161 (YOLO(model, task, verbose) + predict kwargs;
+.to/.predict/.track all present) and official live patterns (cv2 loop kept
+over source=0 generator: raw frames needed for aspect/dt/T1 error paths).
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-28 00:45 local
+
+67 passed, 0 failed (62 prior + 7 new, 1 RED/GREEN cycle):
+- resolve cuda/mps/cpu branches: PASS (monkeypatched torch backends)
+- explicit device wins over cuda: PASS
+- default device resolves: PASS
+- loader returns (model, report) + task/verbose kwargs + binds device: PASS
+- fallback binds device too: PASS
+- All pre-existing loader/extraction/inference tests: PASS (missing-weights
+  updated for kwargs-accepting fake)
+
+Delivered:
+- load_pose_model(path, fallbacks, loader, device) -> (model, report);
+  Ultralytics import explicit at setup, task="pose", device bound once.
+- 03 live cell unpacks report; 04 pipeline unpacks silently (frozen-lines-only).
+- 03 header documents: device policy, eval/no-grad/NMS boundary, ByteTrack
+  deferral (single-worker scope, model.track future), non-goals
+  (annotated export forbidden ADR-0002, file input out ADR-0001).
+
+Audits:
+- 5 notebooks validate clean; headless execute of 03/04: 0 errors (guards skip)
+- tests/__pycache__ removed after run
+
+SRS deltas (workflow step 8): none (setup explicitness only; formula untouched).

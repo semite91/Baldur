@@ -1,0 +1,29 @@
+TEST RESULTS - project.md pipeline chain, #6 restarted TDD (issue #6)
+Scenarios: infrastructure/test/test_scenarios_2026_09_28_02_31.txt (4 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-28 02:38 local
+
+72 passed, 0 failed (67 prior + 5 chain):
+- test_slouch_chain_emits_one_bad_posture: PASS (dwell_s 10, score <70, frozen stdout, released)
+- test_denied_permission_errors_before_model_touch: PASS (single CAMERA_UNAVAILABLE, 0 model calls)
+- test_empty_chain_beats_without_bad_posture: PASS (2 null heartbeats, clocks zeroed)
+- test_mid_chain_inference_failure_stops_loop: PASS (4 calls then break, released, trailing error)
+- test_on_error_callback_reports_code_and_message: PASS
+
+Restart findings (the restart paid for itself):
+1. T1 release-on-failure vs chain expectation: chain test initially asserted an
+   unopened handle stays unreleased; T1's specified behavior releases it.
+   Test corrected to the T1 contract (released is True). No production change.
+2. REAL defect - error storm: safe_update emitted per-frame errors with no
+   channel for the loop owner to stop (10 calls, error every frame). Fix:
+   safe_update gained optional on_error(code, message) callback (default None
+   preserves emit-and-continue; all T3 tests green unchanged). Driver and the
+   04 manual wiring break on first error: one frozen error, camera released,
+   loop stops. Backward compatible by construction.
+
+Audits:
+- 5 notebooks validate clean; headless execute of 02/04: success (guards skip live).
+- tests/__pycache__ removed after run.
+
+SRS deltas (workflow step 8): safe_update signature extended with optional
+on_error (additive, T3 contract preserved); 04 wiring matches driver.

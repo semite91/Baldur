@@ -1,0 +1,24 @@
+TEST RESULTS ADDENDUM - live YOLO layer (issues #6 scenario 12, user review)
+Requirement: runnable (not just defined) YOLO code with committed evidence.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-27 12:19 local
+
+62 passed, 0 failed (60 prior + 2 loader-contract tests):
+- test_loader_skips_live_cells: PASS (RED before nb_loader fix, green after)
+- test_shipped_notebooks_import_without_side_effects: PASS (00-04, silent stdout)
+
+Delivered:
+- 00 probe cell marked # LIVE (user's manual cell preserved verbatim otherwise).
+- 03 live cell (LIVE-marked, BALDUR_LIVE-guarded): weights load + one real
+  frame -> persons/shapes printed. Awaiting user's camera-machine run with
+  BALDUR_LIVE=1; outputs to be committed from that run.
+- 04_live_pipeline.ipynb (new): guarded camera->infer->score->update chain,
+  30 frames, frozen-lines-only output, reuses 00-03 via sibling loader
+  (no logic duplicated). Same manual gate.
+- tests/nb_loader.py: skips # DEMO and # LIVE cells (contract test-pinned).
+
+Guards proven: headless nbconvert of 03 and 04 completes with 0 cell outputs
+(live bodies skipped, no camera/weights touched); all 5 notebooks validate.
+
+SRS deltas (workflow step 8): none. Manual gates 11 (fresh-machine download)
+and 12 (camera end-to-end) remain user-side runs.

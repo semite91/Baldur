@@ -1,0 +1,17 @@
+TEST SCENARIOS ADDENDUM - example-driven setup hardening (issue #6)
+Extends: infrastructure/test/test_scenarios_2026_09_27_11_35.txt (12 scenarios).
+Reference example: YOLOv9+Hydra/ByteTrack vehicle pipeline (file input,
+annotated-media export). Verified against installed ultralytics 8.4.161:
+YOLO(model, task, verbose) + predict(source, stream, **kwargs incl. device).
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+13. resolve device with cuda present -> "cuda"; mps only -> "mps"; neither -> "cpu"
+14. load with cuda present and no explicit device -> model bound to "cuda", report carries it
+15. load with explicit device "cpu" while cuda present -> model bound to "cpu" (explicit wins)
+16. load returns (model, report) with model name, task "pose", device (old single-return callers fail loudly)
+17. loader receives task="pose" and verbose=False kwargs (kwarg-recording fake)
+18. fallback load binds the resolved device on the fallback model too
+19. read 03 header -> eval/no-grad/letterbox/NMS documented as Ultralytics-internal boundary
+20. read 03 header -> ByteTrack deferral recorded (single-worker scope, flapping trigger, model.track future)
+21. read 03 header -> non-goals recorded (annotated export forbidden ADR-0002, file input out ADR-0001, slicing/line-counting N/A)

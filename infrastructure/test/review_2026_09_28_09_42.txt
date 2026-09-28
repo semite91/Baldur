@@ -1,0 +1,35 @@
+OPENCODE REVIEW - #6 YOLO wiring + live layer (issue #6)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: ocr delegate rule on 00/02/03/04 notebooks + nb_loader + 3 test files
+  (system rule group for py/ipynb)
+Date: 2026-09-28 09:42 local. Reviewer: host agent (delegation mode).
+
+FINDINGS
+- Blocking: 1 real defect, FIXED in manual wiring (no pytest cover possible).
+  First-frame dt skew: 04 set _prev before the loop, so first-predict warmup
+  latency (seconds on CPU) would land in frame 1's dt and could fire an
+  instant bad_posture on a slouched first frame. Fix: warmup discard frame
+  (read + infer once) before _prev starts; loop skipped when warmup fails.
+  Headless execute confirms guard-skip; live proof awaits user's BALDUR_LIVE=1
+  run (scenario 12).
+- Non-blocking verification: 00 diff is only the LIVE marker line; all
+  load_pose_model callers use the (model, report) shape (03 live cell prints
+  it, 04 unpacks silently); _score_one closure is synchronous use (no
+  late-binding risk); broad excepts sit only at frozen-event boundaries.
+- Considered and dismissed per rules (precision over recall):
+  - ImportError for missing ultralytics propagates raw (correct: env
+    misconfiguration, not a weights failure; must not masquerade as
+    WEIGHTS_UNAVAILABLE).
+  - Transient .to() failure falls through to fallback list (documented
+    fallback semantics).
+  - loader-loop except Exception: heterogeneous loader errors, final raise
+    is coded; narrowing would invent precision.
+  - suite live smoke (~30s) kept: real-model proof outweighs speed.
+
+VERIFY (workflow step 13 repeat)
+- B:\venvs\baldur\Scripts\python.exe -m pytest tests/: 72 passed, 0 failed.
+- 5 notebooks validate clean; headless 04 execute: success, live body skipped.
+- tests/__pycache__ removed.
+
+SRS deltas (workflow step 8): none (04 warmup is manual-wiring correctness,
+formula untouched).

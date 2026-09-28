@@ -1,0 +1,34 @@
+TEST RESULTS - T5 YOLO inference wiring (issue #6)
+Scenarios: infrastructure/test/test_scenarios_2026_09_27_11_35.txt (12 atomic,
+incl. 2 appended live scenarios 11-12)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-27 11:46 local
+
+60 passed, 0 failed, 0 skipped (45 prior + 15 T5, 2 cycles):
+- loader called once / fallback / missing-weights code: PASS
+- extraction shapes, areas, empty, missing keypoints: PASS
+- torch-tensor conversion (real torch CPU tensors): PASS
+- missing boxes -> keypoint-spread areas: PASS
+- infer_frame persons/empty/codes/passthrough: PASS
+- live smoke through yolo26n-pose.pt on bus.jpg: PASS (shapes + indices sane)
+- extracted largest feeds scorer within bounds: PASS
+- inference writes no files: PASS
+
+Process notes (honest record):
+- Cycle 1 RED was the collection error; cycle-2 tests passed on first run
+  against the cycle-1 machine (same specification-first pattern as T3).
+- One vacuous test caught and fixed during the loop:
+  test_infer_frame_passes_through_inference_error initially raised at
+  construction time (asserting nothing about infer_frame); rewritten so the
+  InferenceError instance traverses infer_frame, genuinely pinning passthrough.
+- Live scenarios 11 (weights auto-download) and 12 (camera end-to-end) are
+  manual gates, not pytest: 11 pending a fresh-machine run, 12 pending a
+  camera-machine run through camera->infer->score->update.
+
+Audits:
+- nbformat.validate(03_yolo_inference.ipynb): clean, 4 cells
+- Headless kernel execution: 0 error outputs
+- disk-write pattern scan: covered by behavior test, no matches
+
+SRS deltas (workflow step 8): none. Weights live at B:\baldur-models (out of
+repo); notebook defaults to the official name for auto-download elsewhere.

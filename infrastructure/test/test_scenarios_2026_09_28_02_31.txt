@@ -1,0 +1,16 @@
+TEST SCENARIOS ADDENDUM - project.md pipeline chain (issue #6 restarted TDD)
+Extends: test_scenarios_2026_09_27_11_35.txt (12) + test_scenarios_2026_09_28_00_34.txt (9).
+Instructor items (project.md Recognition pipeline) mapped to owning stages in
+#6 body; these scenarios prove the INTEGRATED chain with fakes across the
+00/01/02/03 namespaces (no new production code expected; mismatches get fixed).
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+22. permission ok -> open, frame, infer, largest, score, update over 10 slouch
+    seconds -> exactly one bad_posture; every stdout line parses as frozen event
+23. permission denied at open -> frozen CAMERA_UNAVAILABLE error, model loader
+    never called, no further frames attempted
+24. empty frames through infer->score->update for 12 seconds -> heartbeats only,
+    never bad_posture, state clocks stay zeroed
+25. inference raises mid-chain -> frozen error carrying the inference code,
+    camera released, loop stops attempting frames

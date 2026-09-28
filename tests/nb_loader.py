@@ -10,6 +10,7 @@ scoring/camera logic must stay importable with no magic dependencies.
 import json
 
 DEMO_MARKER = "# DEMO"
+LIVE_MARKER = "# LIVE"
 
 
 def load_notebook(path):
@@ -20,7 +21,7 @@ def load_notebook(path):
         if cell["cell_type"] != "code":
             continue
         source = "".join(cell["source"])
-        if DEMO_MARKER in source:
+        if DEMO_MARKER in source or LIVE_MARKER in source:
             continue
         for line in source.splitlines():
             stripped = line.strip()

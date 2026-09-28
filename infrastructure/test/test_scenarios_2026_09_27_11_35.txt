@@ -1,0 +1,27 @@
+TEST SCENARIOS - T5 YOLO inference wiring (issue #6)
+Scope: inference bridge only (Recognition, CONTEXT.md vocabulary).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+ENV (verified 2026-09-27):
+- weights: B:\baldur-models\yolo26n-pose.pt (out of repo; notebook defaults to
+  official name so any machine auto-downloads)
+- smoke image: Temp bus.jpg (5 persons, schema confirmed in T2 spike)
+- seams injectable: fake loader + fake model/results, no hardware in pytest
+
+SCENARIOS:
+1. load primary weights -> model object returned, loader called once
+2. primary missing -> stable fallback weights load (ADR-0003)
+3. primary and fallback missing -> machine-readable error, never silent
+4. feed one frame result -> persons extracted each carrying box area
+5. read extracted persons -> xyn (17,2) and visibility (17,) as numpy
+6. feed empty result -> empty list, never a score
+7. raise inside inference -> InferenceError carrying machine-readable code
+8. live smoke (skip if weights/image absent) -> shapes (N,17,2)/(N,17,3), ears 3,4 shoulders 5,6 sane
+9. feed extracted largest person to scorer -> score within 0-100 or None
+10. run extraction twice on same input -> no files written anywhere
+11. fresh machine without cached weights -> official-name load auto-downloads
+    via Ultralytics, then loads (manual criterion; pytest covers missing
+    weights surfacing as machine-readable error through the fake loader)
+12. live camera frame runs camera->infer->score->update end to end and emits
+    only frozen events (manual gate on a camera machine)
