@@ -1,0 +1,22 @@
+TEST RESULTS ADDENDUM - guarded download-drill cell (issue #6)
+Covers: manual gate 11 (fresh-machine weights download).
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-28 12:06 local
+
+72 passed, 0 failed (suite untouched by this change; drill cell is LIVE-marked
+and env-guarded, invisible to pytest).
+
+Delivered:
+- 03 gains a second LIVE cell: official-name load inside an empty temp dir
+  (no existing cache can shadow it), prints setup report + whether a download
+  occurred, temp (including any download) deleted after, CWD restored in
+  finally. Caches untouched by construction - no rename/restore dance.
+- Headless nbconvert of 03: 6 cells, 0 outputs, 0 errors (both live bodies skip).
+- nbformat.validate(03): clean.
+
+Process note: an in-place edit of this file corrupted its JSON (backslash
+escaping in the edit boundary); recovered by full-file rewrite, re-validated
+clean and suite re-run green. Lesson: prefer whole-file rewrite for .ipynb.
+
+SRS deltas (workflow step 8): none.
+Manual gate: user runs the drill cell with BALDUR_LIVE=1 and commits outputs.

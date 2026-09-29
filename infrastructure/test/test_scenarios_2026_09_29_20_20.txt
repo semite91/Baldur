@@ -1,0 +1,20 @@
+TEST SCENARIOS - T6 Live annotated view (issue #7)
+Scope: viewer overlay only (Recognition; no new decision logic).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+DESIGN (approved): Ultralytics results[0].plot() as base layer (boxes plus
+skeleton, no new dependency); our overlay adds dwell color plus score text.
+Pure cells box_color/annotate_frame tested on synthetic frames; viewer loop
+is LIVE-marked and BALDUR_LIVE-guarded, reusing 00-03 namespaces.
+
+SCENARIOS:
+1. annotate upright frame (in_bad False, box given, score 82) -> green border
+   pixels present, frame shape and dtype preserved
+2. annotate bad frame (in_bad True) -> red border pixels present
+3. annotate with score None and no box -> neutral label rendered, no crash
+4. drive dwell machine 10 slouch-seconds with fakes, feed in_bad into
+   box_color -> red; upright start -> green (color agrees with events)
+5. scan 05 notebook source -> no imwrite/VideoWriter/show persistence calls
+6. live run on camera machine (manual gate): skeleton plus score visible,
+   box tracks green-red-green, q quits, camera released, outputs committed

@@ -1,0 +1,28 @@
+TEST RESULTS - T6 Live annotated view (issue #7)
+Scenarios: infrastructure/test/test_scenarios_2026_09_29_20_20.txt (6 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-29 20:34 local
+
+77 passed, 0 failed (72 prior + 5 viewer):
+- test_upright_frame_renders_green_border: PASS (bottom-edge pixel exact)
+- test_bad_frame_renders_red_border: PASS
+- test_missing_box_and_score_renders_neutrally: PASS (no box drawn, input unmutated)
+- test_box_color_agrees_with_dwell_machine: PASS (green fresh, red after 10 slouch-s)
+- test_viewer_source_has_no_persistence_calls: PASS (no imwrite/VideoWriter/etc.)
+
+Delivered: notebooks/05_live_view.ipynb (4 cells: header, pure overlay cells,
+sibling loader, LIVE viewer loop on plot() base with warmup, q-quit, release
+guarantees). Overlay works on any BGR frame; viewer-local spread bbox is
+visibility-filtered; viewer failures emit frozen errors and break.
+
+Process note: overlay tests passed on first run against the fresh notebook
+(specification-first; file-absence RED preceded). Whole-file Write used for
+the notebook (no incremental ipynb edits).
+
+Audits:
+- 6 notebooks validate clean; headless 05 execute: 4 cells, 0 outputs, 0 errors
+- disk-write scan covers 05 via committed test
+
+SRS deltas (workflow step 8): none.
+Manual gate (user-side): BALDUR_LIVE=1 camera run, green-red-green tracking,
+q quits, outputs committed.
