@@ -1,0 +1,31 @@
+OPENCODE REVIEW - W1 Warning host (issue #13)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: default group (correctness, security, performance, maintainability,
+test coverage) for C# plus the py/ipynb group for fake_engine.py
+Date: 2026-10-02 (same session as implementation)
+Reviewer: host agent (delegation mode).
+
+FINDINGS (2 applied, both small and real):
+1. Start failure leaked the Process object: new Process allocated, Start()
+   threw (missing binary), object never disposed. Fixed with try/catch
+   dispose-plus-rethrow; pinned by StartMissingBinaryThrowsWithoutLeaking.
+2. Public Start accepted null/empty fileName into ProcessStartInfo (fail-late
+   deep inside). Fixed with ThrowIfNullOrWhiteSpace; double-start already
+   guarded, pinned by StartTwiceThrows.
+Considered and dismissed per rules (precision over recall):
+- LastReceivedAtUtc torn read across threads: single-writer background
+  thread, value used only for monotonic polling with retry; self-heals.
+- Unknown future event names counted malformed: correct under the frozen
+  four-event contract (unknown input is a defect signal, not data).
+- Broad Exception catches in tests (ThrowsAny) and Dispose: intentional at
+  process-lifecycle boundaries where exception types vary by OS state.
+- fake_engine.py: finite modes exit cleanly, infinite mode is kill-driven by
+  tests, stdlib only, no issues found.
+Process note: one edit clobbered a neighboring def line mid-review (same
+failure mode as before); repaired immediately and proven by the green run.
+
+VERIFY
+- dotnet test tests/Warning.Tests: 9 passed, 0 failed.
+- dotnet build Baldur.sln: 0 warnings, 0 errors (re-verify at commit time).
+
+SRS deltas (workflow step 8): none (review hardening only).

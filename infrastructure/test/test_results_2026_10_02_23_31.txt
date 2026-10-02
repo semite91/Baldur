@@ -1,0 +1,27 @@
+TEST RESULTS - W1 Warning host skeleton plus protocol proof (issue #13)
+Scenarios: infrastructure/test/test_scenarios_2026_10_02_23_25.txt (10 atomic)
+Toolchain: .NET SDK 8.0.400 installed; project.md says .NET 12 (not publicly
+available) so the ticket fallback fired: target net8.0-windows (LTS). Test
+project retargeted from net8.0 to net8.0-windows for reference compatibility.
+Runner: dotnet test tests/Warning.Tests (xUnit, real child processes)
+Date: 2026-10-02 (run on demand)
+
+7 passed, 0 failed (2 RED/GREEN cycles: missing-types build failure, then
+missing usings; all behavioral tests green on first full run):
+- ZeroDropOnCountedStream: 10/10 heartbeats parsed, none lost
+- ScriptedRunContainsAllFrozenKinds: bad_posture, recovered, heartbeat seen
+- MalformedLineCountedWithoutCrash: 2 good parsed, malformed count 1
+- KillMidRunSurfacesExited: external kill observed via Exited
+- DisposeLeavesNoOrphanProcess: child gone after Dispose
+- ChattyStderrDoesNotDeadlockReader: 200 stderr lines plus 5 events, no hang
+- LastReceivedTimestampAdvances: observable for the W4 watchdog
+
+Delivered: Baldur.sln, src/Warning (WPF app net8.0-windows: EngineEvent with
+frozen-name validation, EngineHost with piped stdout, stderr drain, tree-kill
+dispose), tests/Warning.Tests, infrastructure/test/fake_engine.py (count,
+script, malformed, infinite, spam modes).
+Build: 0 warnings, 0 errors. bin/obj left untracked (no .gitignore in repo;
+proposed as repo hygiene, not this ticket).
+
+SRS deltas (workflow step 8): toolchain decision net8.0-windows recorded here;
+project.md still says .NET 12 (owner file; propose one-line correction).

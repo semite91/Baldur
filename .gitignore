@@ -1,0 +1,12 @@
+# Build outputs
+bin/
+obj/
+.pytest_cache/
+__pycache__/
+# Model weights stay out of the repo (local model dir instead)
+*.pt
+# IDE and OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

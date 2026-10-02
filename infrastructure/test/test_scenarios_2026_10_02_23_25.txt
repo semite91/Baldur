@@ -1,0 +1,19 @@
+TEST SCENARIOS - W1 Warning host skeleton plus protocol proof (issues #13)
+Scope: C# host process manager plus fake-producer protocol proof only.
+Toolchain finding (2026-10-02): .NET SDK 8.0.400 installed; project.md says
+.NET 12, which is not publicly available, so the ticket's own fallback clause
+fires: target net8.0-windows (LTS). project.md correction proposed separately.
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+67. verify SDK (dotnet --version) and record net8.0-windows target decision
+68. solution builds clean (src/Warning plus xUnit tests, dotnet build/test)
+69. fake producer script emits the four frozen JSON lines on a timer
+70. host launches the fake, parses every stdout line with zero drops
+71. malformed stdout line is counted, never crashes the reader
+72. killing the fake mid-run surfaces the Exited signal
+73. disposing the host kills the child tree (no orphan python processes)
+74. chatty stderr child does not deadlock the stdout reader (drained concurrently)
+75. last-received event timestamp observable (feeds the W4 watchdog later)
+76. live manual gate: host skeleton runs against the fake on this machine
