@@ -1,0 +1,21 @@
+TEST SCENARIOS - W2 Fullscreen warning window (issue #12)
+Scope: window plus config plus controller plus asset only (no mouse block,
+no watchdog; those are W3/W4).
+Design: pure WarningPolicy (close rules) plus WarningConfig (JSON load) plus
+WarningController driving an IWarningView fake in tests; XAML wiring proven
+by one STA instantiation smoke test plus manual gates (never Show() in tests).
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+77. missing config file -> defaults (closable true, flashing true)
+78. config file with both flags false -> honored exactly
+79. malformed config file -> throws, never silent defaults
+80. closable true, any dismiss path -> close allowed
+81. closable false, user close attempt -> blocked; recovery or ESC dismisses
+82. bad_posture event -> controller shows the view exactly once per episode
+83. recovered event -> controller hides the view
+84. non-posture events (heartbeat, error) -> view untouched
+85. XAML loads headless: Maximized, Topmost, header text, ESC hint, image set
+86. kyphosis.jpg packaged with the build (23KB JPEG 547x365, rights: owner asset)
+87. live manual gates: above everything, flash below 3Hz, ESC frees, both
+    flag states, hide on recovered

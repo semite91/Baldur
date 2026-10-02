@@ -1,0 +1,33 @@
+OPENCODE REVIEW - W2 Fullscreen warning window (issue #12)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: default group (correctness, security, performance, maintainability,
+test coverage) for C# plus the py/ipynb group where touched
+Date: 2026-10-03 (same session as implementation)
+Reviewer: host agent (delegation mode).
+
+FINDINGS (4 applied, all load-bearing):
+1. Shutdown trap: unclosable windows canceled OnClosing unconditionally, so
+   app quit, Task Manager end-task and OS shutdown could never close the
+   popup. Fixed with a force path (ForceClose for host/tray-driven shutdown
+   plus SessionEnding wiring, both null-safe without an Application
+   instance); user-close policy untouched. Pinned by ForceClose test.
+2. Flash timer ran while hidden: Hide() never stops it, so a hidden window
+   kept waking the Dispatcher indefinitely (battery cost on a laptop app
+   hidden 99% of the time). Fixed with visibility-gated ApplyFlashPolicy;
+   the pure ShouldFlash matrix is unit-tested, the wiring is manual-gated.
+3. ToggleFlash compared Brush instances: works only while none replaces the
+   brush object. Fixed with an explicit boolean (behavior identical).
+4. Config typos silently ignored (case-sensitive parse plus unknown props
+   dropped): a misspelled flag would run wrong with zero feedback. Fixed
+   with case-insensitive parsing plus UnmappedMemberHandling.Disallow; both
+   directions tested. Controller thread-affinity documented instead of hidden
+   inside a Dispatcher (keeps the seam unit-testable; W4 marshals at call site).
+Process note: one compile error on the way (OnIsVisibleChanged is an event,
+not a virtual; subscribed instead) - caught by the compiler, not review.
+
+VERIFY
+- dotnet test tests/Warning.Tests: 29 passed, 0 failed.
+- dotnet build Baldur.sln: 0 warnings, 0 errors (re-verify at commit time).
+
+SRS deltas (workflow step 8): ForceClose plus SessionEnding behavior belong
+to W4's quit flow (mechanism ready, unwired); flash lifecycle documented.

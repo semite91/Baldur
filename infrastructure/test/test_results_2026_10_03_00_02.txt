@@ -1,0 +1,28 @@
+TEST RESULTS - W2 Fullscreen warning window (issue #12)
+Scenarios: infrastructure/test/test_scenarios_2026_10_02_23_53.txt (11 atomic)
+Runner: dotnet test tests/Warning.Tests (xUnit plus StaFact, real windows
+instantiated but never shown)
+Date: 2026-10-03 00:02 local
+
+22 passed, 0 failed (9 W1 untouched and green + 13 W2):
+config load/defaults/malformed, close matrix x4, show-once, hide on
+recovered, non-events ignored x2, XAML chrome smoke, unclosable blocks user
+close. 3 RED/GREEN cycles: missing types, missing usings, xunit-v2/v3 StaFact
+conflict (pinned StaFact 1.1.11 for xunit 2.5.3), XAML resource-assembly miss
+(fixed by pack URI plus Resource build action), relative image URI null in
+test host (same fix).
+
+Delivered: src/Warning WarningConfig (JSON load, missing means defaults,
+malformed throws), WarningPolicy.CanClose matrix, WarningController with
+IWarningView seam (show exactly once per episode, hide on recovered, others
+ignored), WarningWindow.xaml (Maximized borderless Topmost, STAND TALL!!!,
+kyphosis.jpg embedded Resource, always-visible ESC hint, 500ms flash gated
+by config, Closing consults policy, ESC dismisses), Assets/kyphosis.jpg
+(moved from repo root; owner asset per ticket).
+Build: 0 warnings, 0 errors, full solution.
+
+SRS deltas (workflow step 8): asset embedded as Resource (not loose
+copy-to-output: survives single-file publish); test project carries
+Xunit.StaFact 1.1.11 pinned.
+Manual gates (user-side): above everything, flash below 3Hz observed,
+ESC frees, both flag states, hide on recovered.
