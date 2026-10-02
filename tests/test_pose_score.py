@@ -47,9 +47,17 @@ def bowed():
     return make_person((0.45, 0.30), (0.55, 0.30), (0.45, 0.45), (0.55, 0.45),
                        nose=(0.50, 0.44))
 
-
 def hunched():
     return make_person((0.45, 0.30), (0.55, 0.30), (0.465, 0.45), (0.535, 0.45))
+
+
+def turned():
+    return make_person((0.45, 0.30), (0.55, 0.30), (0.45, 0.45), (0.55, 0.45),
+                       nose=(0.545, 0.33))
+
+
+def rolled():
+    return make_person((0.45, 0.30), (0.55, 0.30), (0.45, 0.43), (0.55, 0.47))
 
 
 def asymmetric():
@@ -82,21 +90,27 @@ def test_scores_within_0_to_100():
     assert 0 <= score(*collapsed) <= 100
 
 
-def test_hidden_ears_and_shoulders_scores_none():
+def test_hidden_ears_and_shoulders_scores_zero():
     xyn, _ = upright()
-    assert NS["posture_score"](xyn, numpy.zeros(17)) is None
+    assert NS["posture_score"](xyn, numpy.zeros(17)) == 0.0
 
 
-def test_low_visibility_scores_none():
+def test_low_visibility_scores_zero():
     xyn, _ = upright()
-    assert NS["posture_score"](xyn, numpy.full(17, 0.1)) is None
+    assert NS["posture_score"](xyn, numpy.full(17, 0.1)) == 0.0
 
 
-def test_single_hidden_ear_still_scores():
+def test_single_hidden_ear_scores_zero():
     xyn, _ = upright()
     vis = numpy.full(17, 1.0)
     vis[EAR_L] = 0.0
-    assert NS["posture_score"](xyn, vis) >= 70
+    assert NS["posture_score"](xyn, vis) == 0.0
+
+
+def test_sub_threshold_term_vetoes_total():
+    xyn, _ = asymmetric()
+    vis = numpy.full(17, 1.0)
+    assert NS["posture_score"](xyn, vis) == 0.0
 
 
 # RED cycle 2: largest-Person selection + valid-range predicates.
@@ -158,11 +172,11 @@ def test_bowed_head_scores_below_upright():
     assert score(xyn_bowed, vis_bowed) < score(xyn_up, vis_up)
 
 
-def test_hidden_nose_and_eyes_falls_back():
+def test_hidden_nose_and_eyes_scores_zero():
     xyn, _ = upright()
     vis = numpy.full(17, 1.0)
     vis[[NOSE, EYE_L, EYE_R]] = 0.0
-    assert NS["posture_score"](xyn, vis) == 100.0
+    assert NS["posture_score"](xyn, vis) == 0.0
 
 
 # RED cycle C (aspect revision): normalized x/y units differ on non-square
@@ -208,3 +222,32 @@ def test_hunched_shoulders_score_below_upright():
     xyn_hunched, vis_hunched = hunched()
     score = NS["posture_score"]
     assert score(xyn_hunched, vis_hunched) < score(xyn_up, vis_up)
+
+
+# RED cycle D (facing term): nose-offset yaw signal, 5th term.
+
+
+def test_frontal_face_scores_near_one():
+    xyn, vis = upright()
+    assert NS["facing"](xyn, vis) == 1.0
+
+
+def test_turned_face_scores_below_half_and_below_frontal():
+    xyn_up, vis_up = upright()
+    xyn_turned, vis_turned = turned()
+    facing, score = NS["facing"], NS["posture_score"]
+    assert facing(xyn_turned, vis_turned) < 0.5
+    assert score(xyn_turned, vis_turned) < score(xyn_up, vis_up)
+
+
+def test_hidden_nose_facing_scores_zero():
+    xyn, _ = upright()
+    vis = numpy.full(17, 1.0)
+    vis[NOSE] = 0.0
+    assert NS["facing"](xyn, vis) == 0.0
+    assert NS["posture_score"](xyn, vis) == 0.0
+
+
+def test_roll_only_keeps_facing_at_one():
+    xyn, vis = rolled()
+    assert NS["facing"](xyn, vis) == 1.0

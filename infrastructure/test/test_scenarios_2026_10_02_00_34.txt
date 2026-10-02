@@ -1,0 +1,13 @@
+TEST SCENARIOS ADDENDUM - viewer RULA overlay (issue #7 scope)
+Design (approved pattern): viewer shows grand score plus action beside the
+blend score; box color stays dwell-driven (contract unchanged, cutover still
+gated). Baseline torso self-calibrates as running max (in-memory only).
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+45. first measurable frame sets baseline; later taller torso ratchets it up;
+    unmeasurable frames hold it; None start stays None until measured
+46. annotate with extra line renders both lines, shape preserved, old calls
+    without extra render exactly as before
+47. viewer loop on a scripted session: grand plus action displayed, box color
+    still follows dwell state only, frozen stdout untouched (manual gate)

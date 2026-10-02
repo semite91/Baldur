@@ -111,10 +111,13 @@ def drive_chain(capture, model, n_frames, dt=1.0):
             def score_one():
                 persons = NS03["infer_frame"](model, frame)
                 if not persons:
-                    return None
+                    return None, False
                 person = NS01["select_largest_person"](persons)
-                return NS01["posture_score"](
-                    person["xyn"], person["visibility"], aspect=width / height
+                return (
+                    NS01["posture_score"](
+                        person["xyn"], person["visibility"], aspect=width / height
+                    ),
+                    True,
                 )
 
             frame_events = NS02["safe_update"](
@@ -169,6 +172,24 @@ def test_empty_chain_beats_without_bad_posture():
     assert len(beats) == 2
     assert all(b["score"] is None for b in beats)
     assert state["outside_s"] == 0.0
+
+
+def test_covered_person_chain_fires_at_ten_occluded_seconds(capsys):
+    xyn = numpy.zeros((1, 17, 2))
+    xyn[0, 5] = (0.45, 0.45)
+    xyn[0, 6] = (0.55, 0.42)
+    vis = numpy.zeros((1, 17))
+    xyxy = numpy.array([[10.0, 20.0, 110.0, 220.0]])
+    capture = FakeCapture(frame=numpy.zeros((480, 640, 3), dtype=numpy.uint8))
+    model = FakeModel(results=[FakeResult(xyn, vis, xyxy)])
+    events, state = drive_chain(capture, model, 10)
+    bad = [e for e in events if e["event"] == "bad_posture"]
+    assert len(bad) == 1
+    assert bad[0]["dwell_s"] == 10
+    assert state["in_bad"] is True
+    lines = capsys.readouterr().out.strip().splitlines()
+    assert {json.loads(line)["event"] for line in lines} <= FROZEN_EVENTS
+    assert capture.released is True
 
 
 def test_mid_chain_inference_failure_stops_loop(capsys):

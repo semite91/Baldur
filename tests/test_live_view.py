@@ -42,6 +42,16 @@ def test_missing_box_and_score_renders_neutrally():
     assert (frame == 0).all()
 
 
+def test_extra_line_renders_second_row():
+    frame = blank()
+    plain = NS["annotate_frame"](frame, (10, 10, 50, 50), 82, False)
+    extra = NS["annotate_frame"](frame, (10, 10, 50, 50), 82, False,
+                                 extra="RULA 3/A2")
+    assert extra.shape == plain.shape
+    assert (extra[35:70] != plain[35:70]).any()
+    assert (extra[:35] == plain[:35]).all()
+
+
 def test_box_color_agrees_with_dwell_machine():
     from nb_loader import load_notebook as load
 

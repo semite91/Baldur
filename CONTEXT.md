@@ -21,7 +21,7 @@ Scores at or above 70 are upright; recovery requires reaching 80 to stop flappin
 _Avoid_: threshold, good posture
 
 **Dwell time**:
-Continuous seconds outside valid range before emitting `bad_posture` (10s) or confirming `recovered` (3s).
+Continuous seconds outside valid range before emitting `bad_posture` (10s) or confirming `recovered` (3s). A present-but-illegible Person accrues its own occluded clock toward `bad_posture` at the same bar; nobody-in-frame stays neutral.
 _Avoid_: timeout, delay, window
 
 **Recognition**:

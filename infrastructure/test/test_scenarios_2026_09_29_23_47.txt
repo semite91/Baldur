@@ -1,0 +1,16 @@
+TEST SCENARIOS ADDENDUM - occlusion dwell (issue #4 follow-up, #6 scope)
+Root cause (proven on live captures 2026-09-29): present-but-illegible Person
+(max visibility 0.448, all terms None) freezes dwell clocks forever, so
+sustained looking-down can never fire bad_posture.
+Fix: update(state, score, dt, present=False); None+present accrues a new
+occluded_s clock toward bad_posture at 10s; None+absent freezes as today.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+26. feed None+present 10s -> exactly one bad_posture (score last-or-null)
+27. feed None+absent 20s -> silence, all clocks zeroed (today's hold preserved)
+28. feed None+present 6s then a scored upright frame -> occluded clock reset, no events
+29. enter bad state, then feed None+present -> stays bad, recovery frozen, no flapping
+30. call update without present flag (legacy callers) -> identical behavior to today
+31. chain: covered-camera frames through infer->score->update with presence ->
+    bad_posture at 10 occluded seconds; camera released, frozen stdout

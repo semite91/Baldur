@@ -1,0 +1,23 @@
+RESTORE RECORD - user session overwrote working files (reported 2026-10-02)
+Finding: notebooks/01_pose_score.ipynb had reverted to the aspect-era shape
+(4 terms, weights 0.5/0.25/0.15/0.10, no facing/bands/bool-wrap) plus the
+user's own slouch probe cell (printing isupright False / score 44.5).
+04_live_pipeline.ipynb lacked the presence-tuple returns (manual-only code,
+invisible to pytest). 02/03/05/tests verified intact via suite + loader.
+Date: 2026-10-02 00:09 local. Runner: pytest tests/ -> 99 passed, 0 failed.
+
+Restored (no design changes, all re-verified by the suite):
+- 01: full facing + rebalance + bands + bool-wrap content rewritten; user's
+  probe cell preserved verbatim-logic with a LIVE marker prepended (suite
+  stays silent) and stale outputs cleared. Note: probe source contained
+  accidental UI paste fragments; executable lines kept exactly, trailing
+  whitespace normalized.
+- 04: score_one returns (score, present) tuples (presence flows to the
+  occlusion clock live; previously only the test driver had it).
+- Verified: 99/99 green (facing/bands/occlusion/chain suites all exercise
+  the restored code), 01 (7 cells) and 04 validate clean, headless executes
+  succeed with live bodies skipped.
+
+Process lesson: uncommitted work is fragile. Pending close-outs (#6, #7) and
+the live-output commits would have made any overwrite a one-command recovery.
+SRS deltas: none (restoration only).

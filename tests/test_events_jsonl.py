@@ -199,3 +199,85 @@ def test_largest_person_drives_state_machine():
     assert state_events(events) == [
         {"event": "bad_posture", "score": score, "dwell_s": 10}
     ]
+
+
+# Occlusion dwell (diagnosed 2026-09-29 on live captures): present-but-
+# illegible accrues toward bad_posture; absent freezes as before.
+
+
+def test_occluded_ten_seconds_emits_one_bad_posture():
+    update, new_state = NS["update"], NS["new_state"]
+    state = new_state()
+    events = []
+    for _ in range(10):
+        events.extend(update(state, None, 1.0, present=True))
+    bad = [e for e in events if e["event"] == "bad_posture"]
+    assert len(bad) == 1
+    assert bad[0]["dwell_s"] == 10
+    assert bad[0]["score"] is None
+    assert state["in_bad"] is True
+
+
+def test_absent_none_keeps_all_clocks_zeroed():
+    update, new_state = NS["update"], NS["new_state"]
+    state = new_state()
+    events = []
+    for _ in range(20):
+        events.extend(update(state, None, 1.0, present=False))
+    assert [e for e in events if e["event"] in ("bad_posture", "recovered")] == []
+    assert state["outside_s"] == 0.0
+    assert state["occluded_s"] == 0.0
+
+
+def test_scored_frame_resets_occluded_clock():
+    update, new_state = NS["update"], NS["new_state"]
+    state = new_state()
+    for _ in range(6):
+        update(state, None, 1.0, present=True)
+    update(state, 85, 1.0)
+    assert state["occluded_s"] == 0.0
+    events = []
+    for _ in range(9):
+        events.extend(update(state, None, 1.0, present=True))
+    assert [e for e in events if e["event"] == "bad_posture"] == []
+
+
+def test_bad_hold_through_occlusion():
+    update, new_state = NS["update"], NS["new_state"]
+    state = new_state()
+    for _ in range(10):
+        update(state, 60, 1.0)
+    for _ in range(5):
+        events = update(state, None, 1.0, present=True)
+        assert [e for e in events if e["event"] == "recovered"] == []
+    assert state["in_bad"] is True
+    assert state["recovery_s"] == 0.0
+
+
+def test_legacy_calls_preserve_absent_hold():
+    update, new_state = NS["update"], NS["new_state"]
+    state = new_state()
+    events = []
+    for _ in range(20):
+        events.extend(update(state, None, 1.0))
+    assert [e for e in events if e["event"] in ("bad_posture", "recovered")] == []
+    assert state["occluded_s"] == 0.0
+
+
+def test_tuple_score_fn_marks_presence():
+    safe_update, new_state = NS["safe_update"], NS["new_state"]
+    state = new_state()
+    events = []
+    for _ in range(10):
+        events.extend(safe_update(state, lambda: (None, True), 1.0))
+    assert [e for e in events if e["event"] == "bad_posture"] != []
+
+
+def test_bare_score_fn_means_absent():
+    safe_update, new_state = NS["safe_update"], NS["new_state"]
+    state = new_state()
+    events = []
+    for _ in range(20):
+        events.extend(safe_update(state, lambda: None, 1.0))
+    assert [e for e in events if e["event"] in ("bad_posture", "recovered")] == []
+    assert state["occluded_s"] == 0.0

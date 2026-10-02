@@ -1,0 +1,22 @@
+TEST RESULTS - guard bypass repair (issue #7 scope, user session)
+Root cause (proven from nbconvert log): the 05 capture cell carried a hardcoded
+_os.environ["BALDUR_LIVE"] = "1" line (added in the user's midnight session to
+dodge env setup), forcing live bodies on every execution - headless verify
+crashed on open_camera instead of skipping. Same class of accident as the 01
+revert: manual notebook edits silently break automation contracts.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-02 00:56 local
+
+112 passed, 0 failed:
+- RUN SWITCH cell in 05 (RUN_LIVE = False committed): discoverable manual
+  opt-in beside the env var; both live guards honor either signal
+- hardcoded override line removed (POSTURE_LABEL value kept as user's label)
+- new test_no_hardcoded_live_enablers: bans environ-override lines in all
+  notebooks and RUN_LIVE = True in 05 (would break headless verify)
+- silence contract extended to cover 05 imports
+- headless 05 executes and writes output (guards skip); live smoke re-enabled
+  after re-downloading bus.jpg
+
+SRS deltas (workflow step 8): none (manual-ergonomics repair only).
+For the user: set RUN_LIVE = True in the switch cell (or BALDUR_LIVE=1 in the
+shell) for live runs; never commit True - the new test blocks it.

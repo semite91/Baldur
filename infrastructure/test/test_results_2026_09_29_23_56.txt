@@ -1,0 +1,37 @@
+TEST RESULTS - occlusion-dwell fix (issue #4 follow-up, #6 scope)
+Scenarios: infrastructure/test/test_scenarios_2026_09_29_23_47.txt (6 atomic)
+Root cause: live captures showed present-but-illegible (max vis 0.448, all
+terms None) freezing dwell clocks forever - sustained looking-down unreachable.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-29 23:56 local
+
+85 passed, 0 failed (77 prior + 8 new):
+- occluded-10s fires one bad_posture (score null, dwell 10, in_bad set)
+- absent-20s silence with all clocks zeroed (legacy default preserved)
+- scored frame resets occluded clock (6+1+9 emits nothing)
+- bad hold through occlusion (no recovered, recovery frozen)
+- legacy calls without present flag behave as absent-hold
+- tuple score_fn marks presence; bare score_fn means absent
+- covered-person chain fires at 10 occluded seconds (frozen stdout, released)
+
+Restart findings:
+- Chain RED exposed a REAL defect: error storm (safe_update emitted per-frame
+  errors with no stop channel). Fixed additively: on_error(code, message)
+  callback (default None; all 14 T3 tests green unchanged); driver and 04
+  break on first error (one frozen error, camera released).
+- Chain RED also corrected a wrong test expectation (T1 releases failed
+  handles; chain now asserts released is True) and one malformed fixture
+  (unstacked single-person arrays crashed extraction with UPDATE_FAILED -
+  fixture stacked to (1,17,2)/(1,17)).
+- Incidental: repaired a joined line in test_events_jsonl.py (line 156) that
+  broke collection; suite could not have been green with it - repaired before
+  any run, no results affected.
+
+Audits:
+- 6 notebooks validate clean; headless execute of 02/04: success (guards skip)
+- tests/__pycache__ removed after run
+- CONTEXT.md dwell-time line extended with the occlusion sentence (v1.2)
+
+SRS deltas (workflow step 8): safe_update gains optional on_error plus tuple
+score protocol (both additive, T3 contract preserved); update gains optional
+present flag plus occluded clock (default absent-hold preserved).

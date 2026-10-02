@@ -1,0 +1,30 @@
+TEST RESULTS - strict scorer implementation (user directive 2026-10-02)
+Scenarios: infrastructure/test/test_scenarios_2026_10_02_01_39.txt (6 atomic)
+Semantics: the four named terms return 0.0 instead of None (visibility gates
+and degenerate guards alike); shoulder_posture keeps None (hips rule);
+any of neck-average/pitch/facing/symmetry below 0.7 vetoes the total to 0.0;
+trunk undeterminable defaults to 1 in grand (assumed, documented); neck
+undeterminable keeps grand None; empty frames still never call the scorer.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-02 01:44 local (final re-run after markdown cleanup)
+
+114 passed, 0 failed:
+- hidden/low-vis/single-hidden-ear/nose-hidden now score exactly 0.0
+- asymmetric/bowed still below upright (now via veto at 0.0)
+- upright 100.0, slouch 0.0 (<70 holds), hunched 92.5 (no term vetoed)
+- trunk-default grand (3,2) with hips hidden; all-hidden grand None
+- all prior ordering/bounds/selection/predicate/aspect/RULA/chain/viewer
+  suites green unchanged (only hidden->None expectations rewritten)
+
+Process notes:
+- One stale assertion of mine (facing-None) corrected to the new contract.
+- One markdown cell carried a stray outputs key (schema violation); cleaned.
+- Recurring ipynb tail-brace slips handled via byte-exact scripts each time.
+
+Audits:
+- 6 notebooks validate clean; headless 01 executes successfully
+- tests/__pycache__ removed after run
+
+SRS deltas (workflow step 8): posture_score never returns None now (only
+empty frames yield None, at call sites); dead no-parts branch removed;
+CONTEXT valid-range line still accurate (70/80 untouched by this change).

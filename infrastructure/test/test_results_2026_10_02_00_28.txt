@@ -1,0 +1,32 @@
+TEST RESULTS - genuine RULA tables plus grand score (issue #8, cycle 2)
+Source: RULA Employee Assessment Worksheet (tumeke.io revision, McAtamney &
+Corlett 1993), fetched and machine-extracted 2026-10-02 (pypdf). Tables A/B/C
+plus neck bands, adjusters, legs, muscle/force policy, and action levels all
+match the worksheet verbatim.
+Scenarios: infrastructure/test/test_scenarios_2026_10_02_00_19.txt (8 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-02 00:28 local
+
+106 passed, 0 failed (89 prior + 17 in test_rula_bands.py):
+- table_a/b/c spot values plus clamps: PASS (worksheet numbers)
+- score_c/score_d muscle/force adders: PASS (desk policy muscle 1, force 0)
+- grand upright (3, action 2) and slouch (6, action 3): PASS (hand-computed
+  from the worksheet; upright-3 matches published office-workstation norms)
+- all-hidden grand is None; action map 1-7 to 1/2/2/3/3/4/4: PASS
+- wrist_twist default present and assumed: PASS
+
+Process notes:
+- RED caught a REAL transcription bug: Table A drafted as nested pairs made
+  table_a return lists (TypeError downstream). Fixed to flat-8 rows; the
+  failing tests did exactly their job.
+- One in-place notebook edit corrupted cell JSON (backslash-boundary issue);
+  recovered by regenerating the tables cell programmatically; re-validated.
+- Blend, 70/80 thresholds, dwell and all prior suites untouched (no contract
+  change): grand_score/action_level are additive. Full cutover to action
+  levels stays separately gated (needs its own scenarios plus confirm).
+
+Audits:
+- nbformat.validate(01): clean, 9 cells; headless execute succeeds
+- tests/__pycache__ removed after run
+
+SRS deltas (workflow step 8): none (additive machinery; contract unchanged).

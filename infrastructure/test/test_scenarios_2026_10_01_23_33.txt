@@ -1,0 +1,27 @@
+TEST SCENARIOS - T7 RULA frontal-subset scoring (issue #8)
+Scope: bands engine plus tables plus dwell re-key (Recognition).
+Each scenario is one atomic single-purpose process.
+Manual confirm required before code (workflow.md steps 2-4).
+
+DESIGN (approved 2026-10-01): frontal subset of RULA (McAtamney & Corlett
+1993). Full-fidelity coronal items; proxy sagittal bands with confidence
+flags; documented defaults for legs/arms/wrists; Tables A/B/C transcribed
+as data; 10s/3s dwell re-keyed onto action levels (kept apart from RULA's
+1-minute clinical static threshold: wellness nudge, not MSD diagnosis).
+Per-session baselines in memory only (ADR-0002).
+
+SCENARIOS:
+1. frontal upright fixture -> neck band 1 via pitch proxy, high confidence
+2. strong slouch fixture -> neck band 3 via pitch proxy, low confidence flag
+3. turned face beyond facing threshold -> neck twist +1 adjuster
+4. unlevel shoulders beyond tolerance -> neck side-bend +1 adjuster
+5. tilted shoulder-plus-hip lines -> trunk side-bend +1 adjuster
+6. shoulder-vs-hip line angle differential -> trunk twist +1 adjuster
+7. torso shortening vs baseline -> trunk flexion band (wide bins)
+8. legs/arms/wrists out of frame -> documented defaults returned and flagged
+9. fixture region scores through transcribed Tables A/B/C -> hand-computed
+   grand score and action level (worksheet values, not code values)
+10. 10s at actionable grand score -> bad_posture; 3s back at acceptable ->
+    recovered (dwell re-keyed off 70/80)
+11. validation protocol executed: machine-vs-hand Cohen kappa on labeled
+    desk captures; ship bar 0.6 or bands widen (manual/research gate)

@@ -1,0 +1,20 @@
+TEST SCENARIOS ADDENDUM - strict scorer (user directive 2026-10-02)
+Direction: hidden or weak evidence scores 0, never abstains (except empty
+frames, which are never scored); hips-unseen excludes trunk terms with an
+assumed trunk default in grand. This REVERSES prior hidden->None semantics
+for the four named terms; affected old tests get rewritten, not deleted.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+47. any of neck sides, pitch inputs, facing inputs, symmetry inputs unseen ->
+    that term 0.0 (never None); shoulder_posture keeps None (hips rule)
+48. neck-average, pitch, facing or symmetry below 0.7 -> total exactly 0.0
+    (single hidden ear included: neck average 0.5 trips the veto)
+49. full-visibility upright -> 100.0 unchanged; full-visibility slouch -> 0.0
+    (still below 70); asymmetric/bowed/hunched orderings hold
+50. hips unseen in RULA -> trunk terms excluded (None as today), grand uses
+    trunk default 1 flagged assumed; neck unseen -> grand None preserved
+51. empty frame (no persons) -> None without calling posture_score (neutral
+    preserved; only scored frames can hit 0)
+52. prior suite re-verified: upright/slouch/bounds/selection/predicates/aspect
+    green unchanged; hidden->None expectations rewritten to hidden->0

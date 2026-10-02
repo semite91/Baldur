@@ -1,0 +1,15 @@
+TEST RESULTS - RULA bands folded into 01 (issue #8, user correction)
+Correction: 06_rula_bands.ipynb should never have existed; scoring lives in
+01_pose_score.ipynb (one notebook per stage). Bands cells moved verbatim with
+shared names reused (_midpoint, index constants, VISIBILITY_FLOOR); only
+RULA-specific constants and helpers are new. 06 deleted (was uncommitted).
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-01 23:49 local
+
+99 passed, 0 failed (89 prior + 10 bands, all green after the move):
+- All 10 bands tests pass unmodified against 01 (move is behavior-preserving)
+- All 24 blend tests pass unmodified (blend untouched by the move)
+- 01 validates clean (6 cells); headless execute succeeds
+
+SRS deltas (workflow step 8): none (relocation only).
+Next: cycle 2 (Tables A/B/C transcription pending user verification gate).

@@ -1,0 +1,31 @@
+TEST RESULTS - facing term (issue #6, T2 scope)
+Scenarios: infrastructure/test/test_scenarios_2026_09_30_10_13.txt (5 atomic)
+Root cause: sideways tilt/yaw collapses to profile (live frame: shoulder width
+0.0025, zero joints above floor); frontal-plane terms cannot see turning.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-09-30 10:18 local
+
+89 passed, 0 failed (85 prior + 4 facing):
+- test_frontal_face_scores_near_one: PASS (1.0)
+- test_turned_face_scores_below_half_and_below_frontal: PASS (0.0, 90.0 < 100.0)
+- test_hidden_nose_facing_falls_back: PASS (None, upright stays 100.0)
+- test_roll_only_keeps_facing_at_one: PASS (roll belongs to symmetry)
+- All 85 pre-existing tests: PASS unchanged (rebalance: neck 0.45, pitch 0.25,
+  sym 0.10, proxy 0.10, facing 0.10; slouch ~45, upright 100, asymmetric ~90)
+
+Design notes:
+- facing() uses nose-offset/eye-width only (deviation from locked spec, which
+  mentioned shoulders: eye ruler is self-sufficient, fewer gates, documented
+  in docstring). YAW_REF 0.5.
+- Full profile (face hidden, like the live tilt frame) still resolves None ->
+  covered behaviorally by the occlusion clock, documented in header.
+- Closing proof on the live tilt frame: gated None (nose/eyes 0.05/0.02/0.07
+  below floor) -> occlusion path, as designed; user live re-test pending.
+
+Audits:
+- nbformat.validate(01_pose_score.ipynb): clean, 4 cells
+- Headless kernel execution: success (0 error outputs)
+- tests/__pycache__ removed after run
+
+SRS deltas (workflow step 8): score v1 now five terms; CONTEXT.md posture-score
+line (v1.1) under-describes again -> update at close-out.

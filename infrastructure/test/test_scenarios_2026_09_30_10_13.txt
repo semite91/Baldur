@@ -1,0 +1,17 @@
+TEST SCENARIOS ADDENDUM - facing term (issue #6, T2 scope)
+Root cause: sideways tilt/yaw collapses to profile (live frame: shoulder width
+0.0025, zero joints above floor); frontal-plane terms cannot see turning.
+Design: facing(xyn, visibility) from nose-offset ratio (disambiguates turning
+from hunching, unlike width signals); 5th term, weight 0.10; full profile
+(face hidden) stays occlusion-covered by design.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+32. frontal fixture -> facing at or near 1.0
+33. three-quarter-turn fixture (nose offset, face visible) -> facing below 0.5
+    and scores below its frontal counterpart
+34. hidden nose -> facing None, upright preserved via renormalization
+35. rebalance (neck 0.45 / others held or rescaled to sum 1.0) -> all 85
+    pre-existing tests green unchanged; upright>=70 and slouch<70 hold
+36. roll-only lean (unlevel shoulders, centered nose) -> facing stays 1.0
+    (roll belongs to symmetry, not facing)

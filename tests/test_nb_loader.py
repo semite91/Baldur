@@ -29,6 +29,24 @@ def test_shipped_notebooks_import_without_side_effects(capsys):
         "02_events_jsonl.ipynb",
         "03_yolo_inference.ipynb",
         "04_live_pipeline.ipynb",
+        "05_live_view.ipynb",
     ):
         load_notebook(str(root / name))
     assert capsys.readouterr().out == ""
+
+
+def test_no_hardcoded_live_enablers():
+    root = Path(__file__).resolve().parents[1] / "notebooks"
+    for name in (
+        "00_env_camera.ipynb",
+        "01_pose_score.ipynb",
+        "02_events_jsonl.ipynb",
+        "03_yolo_inference.ipynb",
+        "04_live_pipeline.ipynb",
+        "05_live_view.ipynb",
+    ):
+        source = (root / name).read_text(encoding="utf-8")
+        assert 'environ["BALDUR_LIVE"] = "1"' not in source, name
+    assert "RUN_LIVE = True" not in (root / "05_live_view.ipynb").read_text(
+        encoding="utf-8"
+    )
