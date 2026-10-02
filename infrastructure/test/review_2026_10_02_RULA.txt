@@ -1,0 +1,39 @@
+OPENCODE REVIEW - #8 RULA frontal-subset scoring (issue #8)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: system rule group for py/ipynb (same set as prior passes)
+Date: 2026-10-02 (post-merge review of committed 765c9b8 content)
+Reviewer: host agent (delegation mode).
+
+SCOPE: bands engine, transcribed Tables A/B/C, grand_score plus action_level,
+note_torso baseline, trunk default, strict-scorer veto and 0-instead-of-None.
+
+FINDINGS
+- Blocking: NONE.
+- Considered and dismissed per rules (precision over recall):
+  - grand trunk default 1 is silent in the return shape: accepted by design
+    (mirrors limb_defaults philosophy, documented in docstring plus header);
+    changing the shape would break the pinned (grand, action) contract.
+  - table_a/table_b negative-index wraparound on out-of-range inputs: all
+    callers pass fixed internal values (defaults plus 1-6/1-3 bands);
+    validation would add untested behavior for unreachable paths.
+  - note_torso running-max never decays within a session (stand/walk
+    inflates baseline): documented limitation, harmless for desk sessions;
+    fresh process per run bounds it.
+  - veto min() over four terms: all four provably float on every path
+    (visibility gates and degenerate guards return 0.0, never None);
+    no None can reach the comparison.
+  - posture_score returning numpy scalars in float paths: json-serializable
+    (np.float64 subclasses float) and bool-wrapped at predicate boundaries.
+- Dead branch removal (if not parts) verified sound: sides always carries
+  exactly two floats, so parts can never be empty.
+
+VERIFY
+- B:\venvs\baldur\Scripts\python.exe -m pytest tests/: 118 passed (includes
+  all RULA, strict, facing, occlusion, chain, viewer suites).
+- tests/__pycache__ removed after run.
+
+SRS deltas (workflow step 8): none (review only; code already committed).
+Supersessions recorded for close-out: dwell re-key to action levels is VOID
+(blend-triggers decision stands); grand/action remain advisory display.
+Residual user-side gates: worksheet cell-by-cell check, kappa protocol,
+live re-tests.
