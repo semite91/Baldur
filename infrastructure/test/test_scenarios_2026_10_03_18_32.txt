@@ -1,0 +1,17 @@
+TEST SCENARIOS - W3 Mouse blocking (issue #10)
+Scope: hook-plus-clip combo with pure decision seams only. Session safety
+rule: no test ever enables swallowing (a crashed swallow test would eat the
+session mouse); the enabled path differs from the tested path by one boolean
+the matrix pins. Real swallow proven by the manual gate, not pytest.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+88. move, left/right/middle down-up and wheel swallowed when blocking
+89. same messages pass through when not blocking
+90. keyboard-range messages never swallowed (separate hook type by construction)
+91. clip rect equals the primary display bounds with origin at zero
+92. Start installs, Stop removes, double Stop is safe, Dispose releases
+93. engine-death drill: kill mid-block releases via Dispose path (manual gate
+    plus OS thread-exit cleanup as the documented net)
+94. live manual gates: block engages with popup, gated inputs dead, ESC frees,
+    multi-monitor primary rule observed, no stray cursor escape

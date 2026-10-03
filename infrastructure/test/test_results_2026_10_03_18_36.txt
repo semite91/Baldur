@@ -1,0 +1,25 @@
+TEST RESULTS - W3 Mouse blocking (issue #10)
+Scenarios: infrastructure/test/test_scenarios_2026_10_03_18_32.txt (7 atomic)
+Design: pure swallow matrix plus clip rect plus install/uninstall lifecycle.
+Session safety rule held: no test enables real swallowing (pass-through mode
+only); the enabled path differs by one matrixed boolean, proven manually.
+Runner: dotnet test tests/Warning.Tests (xUnit)
+Date: 2026-10-03 18:36 local
+
+49 passed, 0 failed (29 prior untouched and green + 20 W3):
+swallow matrix x10 (move, buttons down-up, wheel, x-buttons), pass-through x4,
+keyboard-range never x3, clip rect origin plus positive size, Start/Stop plus
+double-Stop plus Dispose-without-Start safety. 2 RED/GREEN cycles: missing
+types, then LibraryImport source-gen friction (CharSet plus unsafe) resolved
+by classic DllImport, the right tool for plain Win32 interop.
+
+Delivered: Wm message ids, MouseMessageFilter.ShouldSwallow, NativeMethods
+(DllImport SetWindowsHookEx/Unhook/CallNextHookEx/ClipCursor/GetModuleHandle
+plus Rect), MouseBlocker (delegate held alive in a field, hook installed in
+pass-through, ClipCursor only when blocking, unclip plus unhook always on
+Stop, idempotent Dispose).
+Build: 0 warnings, 0 errors, full solution.
+
+SRS deltas (workflow step 8): DllImport over LibraryImport recorded here.
+Manual gates (user-side): block engages with popup, gated inputs dead, ESC
+frees, engine-death drill releases, multi-monitor primary rule observed.

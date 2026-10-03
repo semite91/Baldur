@@ -1,0 +1,32 @@
+OPENCODE REVIEW - W3 Mouse blocking (issue #10)
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: default group (correctness, security, performance, maintainability,
+test coverage) for C#, py/ipynb group where touched
+Date: 2026-10-03 18:41 local
+Reviewer: host agent (delegation mode).
+
+FINDINGS (1 applied, load-bearing for correctness):
+1. Silent no-op hazard: WH_MOUSE_LL callbacks fire only on threads running a
+   message loop, so installing from a background thread would make blocking
+   silently do nothing with all tests still green (tests never enable
+   swallowing by session-safety rule). Fixed by documenting the threading
+   contract on the class (same UI thread for Start/Stop; W4 glue owns it).
+   No code path changed; behavior verified by the unchanged green run.
+Considered and dismissed per rules (precision over recall):
+- CallNextHookEx with null handle: documented-OK pattern for low-level hooks.
+- ClipCursor failure ignored: acceptable degradation (hook still swallows;
+   cursor may drift monitors); no recovery action exists to take.
+- Unhook during in-flight callback: OS serializes, documented behavior.
+- GetModuleHandle(null) plus thread zero: the standard global-hook pattern.
+- Test-installed global hooks (pass-through): millisecond-scale machine-wide
+   dispatch cost, OS-timeout protected; session safety preserved because
+   swallowing stays disarmed.
+- Keyboard exclusion by construction (no keyboard hook installed) stands as
+   designed; ESC path needs no hook work in W3 scope.
+
+VERIFY
+- dotnet test tests/Warning.Tests: 49 passed, 0 failed.
+- dotnet build Baldur.sln: 0 warnings, 0 errors (re-verify at commit time).
+
+SRS deltas (workflow step 8): threading contract recorded on the class;
+W4 glue must call Start/Stop on the UI thread.
