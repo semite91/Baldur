@@ -1,0 +1,16 @@
+TEST SCENARIOS - W4 Recovery, error and heartbeat (issue #14)
+Scope: watchdog policy, error display, AppHost composition, tray lifecycle.
+Threshold locked: 10 seconds silence (2 missed beats) means engine-dead.
+Error display reuses WarningWindow chrome with injected copy, flashing off.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+95. silence of 9.9s with heartbeats before -> alive; 10.1s silence -> dead
+96. recovered event -> shared teardown path (hide plus unblock, same as ESC)
+97. error event -> visible error state, never the red warning screen
+98. engine death mid-block -> error state plus guaranteed release
+99. Tray shows presence; Quit path force-closes, stops block, disposes host
+100. second launch exits without side effects (single instance)
+101. one engine restart attempted after death, then parked in error state
+102. live manual gates: kill-fake drill, error display read, tray quit,
+    double-launch behavior, quit while blocked releases

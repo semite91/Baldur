@@ -1,0 +1,39 @@
+TEST RESULTS - W4 Recovery, error and heartbeat (issue #14)
+Scenarios: infrastructure/test/test_scenarios_2026_10_03_19_03.txt (8 atomic)
+Threshold locked: 10s silence (2 missed beats) means engine-dead.
+Runner: dotnet test tests/Warning.Tests (xUnit plus StaFact, real processes)
+Date: 2026-10-03 19:19 local
+
+61 passed, 0 failed (49 prior untouched and green + 12 W4):
+watchdog boundary 9.9/10.0/10.1, error display text plus visibility, bad-plus-
+recovery engage and release through AppHost, watchdog trip without death,
+single restart then parked error, dispose twice safe, restart-failure and
+faulty-view host survival, tray construct plus quit-click plus dispose,
+single-instance double-acquire. 3 RED/GREEN cycles: missing types, WinForms
+ambiguity on Application/Brush/KeyEventArgs (fully qualified), then the
+crash hunt below.
+
+Crash hunt (the value of this loop): the first green-looking run ABORTED the
+test host with InvalidOperationException from a background thread. Two real
+race defects found and fixed:
+1. EngineHost could not restart: the dead Process object stayed assigned, so
+   the restart call threw on a threadpool thread and killed the host. Fixed
+   with lock-gated lifecycle plus reap-on-Exited (dead object disposed and
+   cleared); WaitForExit treats vanishing objects as exited.
+2. Controller marked shown only after a successful Show: a throwing view left
+   state inconsistent (later recovered never delivered). Fixed by recording
+   intent before acting; the host error path covers the fallout.
+Both proven by dedicated tests (restart cycle, faulty view survival).
+
+Delivered: WatchdogPolicy (10s tripwire), WarningWindow.ShowError plus
+error-details element (flash off, always closable), AppHost (engine, view,
+blocker, controller composition with restart-once, watchdog check, shared
+teardown, quit-safe Dispose), IWarningView.ShowError contract (implementations
+must not throw), TrayController (framework tray, quit event, headless-safe
+construct/dispose), SingleInstance (named mutex lease).
+Build: 0 warnings, 0 errors, full solution.
+
+SRS deltas (workflow step 8): ForceClose plus quit flow now have their caller
+(AppHost.Dispose); tray/menu copy and single-instance name are W5 polish.
+Manual gates (user-side): kill-fake drill, error display read, tray quit,
+double-launch behavior, quit while blocked releases.

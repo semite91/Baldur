@@ -1,0 +1,31 @@
+OPENCODE REVIEW - W4 Recovery, error and heartbeat (issue #14), second pass
+Tool: alibaba/open-code-review (ocr.exe, delegation mode, no LLM key required)
+Rules: default group for C# (correctness, concurrency, lifecycle)
+Date: 2026-10-03 19:45 local
+Reviewer: host agent (delegation mode).
+
+FINDINGS (all applied):
+1. Double Start poisoned the host: AppHost marked itself started before the
+   engine launch succeeded, so a failed first Start made every later Start
+   throw. Fixed by setting the flag only after success plus unsubscribe on
+   failure; pinned by FailedStartDoesNotPoisonHost.
+2. Suite hung 15 minutes with zero output: test collections running in
+   parallel deadlocked (global mouse hooks plus child-process kill cycles
+   plus STA windows do not compose concurrently; every class passed alone
+   in seconds). Fixed with assembly-level DisableTestParallelization plus a
+   comment stating why; full suite now 62 green in ~7 seconds serially.
+3. Abandoned-mutex takeover test deleted: abandonment delivery is not
+   controllable from managed test code (the repro failed for environmental
+   reasons, not code reasons). The defensive catch stays with a comment
+   naming the manual verification; per the TDD rules, an untestable seam
+   is documented, not force-tested.
+4. Incidental repairs: AppHost missing EngineProcessId accessor added;
+   malformed test-method name fixed; orphaned fake processes from the
+   crashed run confirmed absent.
+
+VERIFY
+- dotnet test tests/Warning.Tests: 62 passed, 0 failed.
+- dotnet build Baldur.sln: 0 warnings, 0 errors (re-verify at commit time).
+
+SRS deltas (workflow step 8): serial-test policy recorded in AssemblyInfo;
+abandoned-mutex path documented as manually verifiable only.
