@@ -7,12 +7,12 @@ using System.Windows.Threading;
 namespace Baldur.Warning;
 
 /// <summary>Fullscreen always-on-top warning. Shown on bad_posture only.</summary>
-public partial class WarningWindow : Window
+public partial class WarningWindow : Window, IWarningView
 {
     private readonly WarningConfig _config;
     private readonly DispatcherTimer _flashTimer;
-    private readonly Brush _alertBrush = Brushes.Red;
-    private readonly Brush _plainBrush = Brushes.White;
+    private readonly System.Windows.Media.Brush _alertBrush = System.Windows.Media.Brushes.Red;
+    private readonly System.Windows.Media.Brush _plainBrush = System.Windows.Media.Brushes.White;
     private bool _dismissed;
     private bool _systemClose;
     private bool _rendered;
@@ -30,15 +30,32 @@ public partial class WarningWindow : Window
         _flashTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _flashTimer.Tick += (_, _) => ToggleFlash();
         IsVisibleChanged += (_, _) => ApplyFlashPolicy();
-        if (Application.Current is not null)
+        if (System.Windows.Application.Current is not null)
         {
-            Application.Current.SessionEnding += (_, _) => _systemClose = true;
+            System.Windows.Application.Current.SessionEnding += (_, _) => _systemClose = true;
         }
     }
 
     public void DismissForRecovery()
     {
         ForceClose();
+    }
+
+    /// <summary>Engine failure display: detail text, no flashing red, always closable.</summary>
+    public void ShowErrorDetails(string message)
+    {
+        _flashTimer.Stop();
+        DetailText.Text = message;
+        DetailText.Visibility = Visibility.Visible;
+    }
+
+    public void ShowError(string message)
+    {
+        ShowErrorDetails(message);
+        if (!IsVisible)
+        {
+            Show();
+        }
     }
 
     /// <summary>Host-driven shutdown (tray quit, app exit): bypasses the user-close policy.</summary>
@@ -77,9 +94,9 @@ public partial class WarningWindow : Window
         base.OnClosing(e);
     }
 
-    private void OnKeyDown(object sender, KeyEventArgs e)
+    private void OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.Escape)
+        if (e.Key == System.Windows.Input.Key.Escape)
         {
             _dismissed = true;
             Close();

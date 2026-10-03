@@ -16,6 +16,7 @@ public sealed class WarningWindowTests
             Assert.Equal("STAND TALL!!!", window.HeaderText.Text);
             Assert.Contains("ESC", window.EscHint.Text);
             Assert.NotNull(window.PostureImage.Source);
+            Assert.IsAssignableFrom<IWarningView>(window);
         }
         finally
         {
@@ -48,5 +49,22 @@ public sealed class WarningWindowTests
         window.Closed += (_, _) => closed = true;
         window.ForceClose();
         Assert.True(closed);
+    }
+
+    [StaFact]
+    public void ErrorDetailsShowWithoutWarningChrome()
+    {
+        var window = new WarningWindow(new WarningConfig(IsWarningWindowClosable: true));
+        try
+        {
+            Assert.Equal(Visibility.Hidden, window.DetailText.Visibility);
+            window.ShowErrorDetails("Camera lost");
+            Assert.Equal("Camera lost", window.DetailText.Text);
+            Assert.Equal(Visibility.Visible, window.DetailText.Visibility);
+        }
+        finally
+        {
+            window.DismissForRecovery();
+        }
     }
 }

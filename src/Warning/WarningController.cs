@@ -1,10 +1,13 @@
 namespace Baldur.Warning;
 
-/// <summary>Test seam between the controller and any real window.</summary>
+/// <summary>Test seam between the controller and any real window.
+/// Implementations must not throw: the host treats error display as
+/// infallible once it has decided to show it.</summary>
 public interface IWarningView
 {
     void Show();
     void Hide();
+    void ShowError(string message);
 }
 
 /// <summary>Routes engine events to the warning view, once per episode.
@@ -21,16 +24,16 @@ public sealed class WarningController(IWarningView view)
         {
             if (!_shown)
             {
-                view.Show();
                 _shown = true;
+                view.Show();
             }
         }
         else if (e.Name == "recovered")
         {
             if (_shown)
             {
-                view.Hide();
                 _shown = false;
+                view.Hide();
             }
         }
     }

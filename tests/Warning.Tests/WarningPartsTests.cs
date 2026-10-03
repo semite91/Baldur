@@ -106,8 +106,10 @@ public sealed class WarningControllerTests
     {
         public int Shows { get; private set; }
         public int Hides { get; private set; }
+        public List<string> Errors { get; } = new();
         public void Show() => Shows++;
         public void Hide() => Hides++;
+        public void ShowError(string message) => Errors.Add(message);
     }
 
     private static EngineEvent Named(string name) =>

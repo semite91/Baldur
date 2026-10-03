@@ -20,5 +20,8 @@
         <TextBlock x:Name="EscHint" x:FieldModifier="public" Grid.Row="2"
                    Text="Press ESC to dismiss" Foreground="White" FontSize="24"
                    HorizontalAlignment="Center" Margin="0,0,0,40"/>
+        <TextBlock x:Name="DetailText" x:FieldModifier="public" Grid.Row="1"
+                   Text="" Foreground="White" FontSize="20" Visibility="Hidden"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,20"/>
     </Grid>
 </Window>
