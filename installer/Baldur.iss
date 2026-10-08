@@ -1,13 +1,13 @@
-; Baldur Posture 1.0.0 installer (Inno Setup 6).
+; Baldur 1.0.0 installer (Inno Setup 6).
 ; Per-user install, no admin rights required. Bundles the self-contained
 ; Warning app plus the frozen Recognition engine (Python embedded).
 ; Unsigned build: SmartScreen/Defender warnings on first install are
 ; expected until a code-signing certificate is procured (see #11).
 
-#define MyAppName "Baldur Posture"
+#define MyAppName "Baldur"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Baldur"
-#define MyAppExeName "Warning.exe"
+#define MyAppExeName "Baldur.exe"
 
 [Setup]
 AppId={{111ab4b6-a1f6-4153-8786-fdaf7079fe07}
@@ -26,22 +26,22 @@ UninstallDisplayName={#MyAppName} {#MyAppVersion}
 ; An optional Startup shortcut is offered as an unchecked task below.
 
 [Files]
-Source: "B:\baldur-publish\warning\Warning.exe"; DestDir: "{app}\Warning"; Flags: ignoreversion
-Source: "B:\baldur-dist\engine\*"; DestDir: "{app}\engine"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "B:\baldur-publish\warning\Baldur.exe"; DestDir: "{app}\Baldur"; Flags: ignoreversion
+Source: "B:\baldur-dist\engine\*"; DestDir: "{app}\Baldur\engine"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\Warning\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\Warning\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\Baldur\{#MyAppExeName}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\Baldur\{#MyAppExeName}"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; Flags: unchecked
 Name: "startupicon"; Description: "Start Baldur with Windows &startup"; Flags: unchecked
 
 [Icons]
-Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\Warning\{#MyAppExeName}"; Tasks: startupicon
+Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\Baldur\{#MyAppExeName}"; Tasks: startupicon
 
 [Run]
-Filename: "{app}\Warning\{#MyAppExeName}"; Description: "Launch {#MyAppName} now"; Flags: nowait postinstall unchecked skipifsilent
+Filename: "{app}\Baldur\{#MyAppExeName}"; Description: "Launch {#MyAppName} now"; Flags: nowait postinstall unchecked skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

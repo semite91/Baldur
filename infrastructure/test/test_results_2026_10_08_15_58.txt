@@ -1,0 +1,28 @@
+TEST RESULTS - #17 Baldur name everywhere (owner-approved 5 files)
+Scope: AssemblyName Baldur (Baldur.exe/dll), MainWindow Title Baldur,
+tray tooltip Baldur, installer names/paths Baldur (+engine beside exe
+so ProductionBoot discovery is unchanged), toast app_id Baldur.
+Scenarios: test_scenarios_2026_10_08_15_50.txt (N1-N7).
+Date: 2026-10-08 15:58 local
+
+Verified:
+- N1 per-project build outputs Baldur.dll (N1 exe name follows the same
+  AssemblyName at publish).
+- N2/N3 titles read Baldur in both XAML files.
+- N6 toast app_id edit is a 1-line scripted JSON change; loader + live
+  view + engine pytest subset green (41 passed).
+- N7 grep audit: remaining user-visible Warning/MainWindow hits are only
+  code-namespace (Warning.MainWindow x:Class), historical records
+  (results/taskkill notes), and waived docs domain vocabulary.
+- Namespaces, mutex, %APPDATA%, sln untouched per issue.
+
+NOT verified at commit time (environment-blocked, VS Code open):
+- Full xUnit suite post-change (builds flake on the wpftmp copy step
+  while the IDE contends; rerun green required before release).
+- Republish (Baldur.exe) + installer recompile + install-surface
+  checklist (exe name, Start Menu, tray, toasts). The .iss already
+  references the new names/paths; compile pending a quiet build window.
+
+Follow-ups: quiet-window xUnit + republish + ISCC + install gates,
+then a v1.0.1 setup. Issue closed per owner direction with these
+pending items recorded here.

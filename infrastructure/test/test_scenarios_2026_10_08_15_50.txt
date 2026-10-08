@@ -1,0 +1,20 @@
+TEST SCENARIOS - #17 Baldur name everywhere (owner loop start)
+Rule: user-visible surfaces say Baldur; code namespaces (Baldur.Warning),
+mutex, %APPDATA%\Baldur, Baldur.sln, and domain vocabulary in docs/specs
+stay untouched. No test currently pins a user-visible name (verified by
+grep); suite rerun proves no regression.
+Manual confirm required before code (workflow steps 2-4 + multi-file rule).
+
+SCENARIOS:
+N1. Build outputs Baldur.exe + Baldur.dll (AssemblyName); no Warning.exe
+    produced; publish output name follows.
+N2. Warning window Title reads Baldur (already the worktree value).
+N3. Dead MainWindow Title reads Baldur (consistency, never shown).
+N4. Tray tooltip reads Baldur.
+N5. Installer shows Baldur on: setup title, install dir, Start Menu
+    entry, uninstall entry; installs Baldur.exe under {app}\Baldur.
+N6. Toast app_id reads Baldur (notebook edit via scripted JSON, loader
+    tests unaffected since toast cells are not importable logic).
+N7. Grep audit for user-visible Warning/MainWindow strings returns only
+    code-namespace, historical-record (results/taskkill notes), and
+    waived hits (docs domain vocabulary, mutex, sln, APPDATA).

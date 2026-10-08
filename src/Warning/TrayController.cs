@@ -16,7 +16,7 @@ public sealed class TrayController : IDisposable
     {
         _icon = new NotifyIcon
         {
-            Text = "Baldur Posture",
+            Text = "Baldur",
             Visible = false,
         };
         _menu = new ContextMenuStrip();
