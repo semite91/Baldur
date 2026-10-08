@@ -71,3 +71,43 @@ def test_viewer_source_has_no_persistence_calls():
     source = Path(NOTEBOOK).read_text(encoding="utf-8")
     for forbidden in ("imwrite", "VideoWriter", "imsave", "savefig", "imencode"):
         assert forbidden not in source
+
+
+# RED: forced background warning, testing only (winotify toasts).
+
+
+def test_bad_transition_fires_single_toast():
+    calls = []
+    fake = lambda title, message, duration: calls.append((title, message, duration))
+    send = NS["toast_on_transition"]
+    assert send(False, True, fake) is True
+    assert send(True, True, fake) is True
+    assert len(calls) == 1
+    assert "bad posture" in calls[0][0]
+    assert calls[0][2] == "short"
+
+
+def test_recovery_transition_fires_recovery_toast():
+    calls = []
+    fake = lambda title, message, duration: calls.append((title, message, duration))
+    send = NS["toast_on_transition"]
+    assert send(True, False, fake) is False
+    assert len(calls) == 1
+    assert "recovered" in calls[0][0]
+    assert calls[0][2] == "short"
+
+
+def test_warning_specs_carry_short_duration():
+    spec = NS["warning_spec"]
+    assert spec("bad")["duration"] == "short"
+    assert spec("recovered")["duration"] == "short"
+
+
+def test_failing_backend_degrades_to_print(capsys):
+    def broken(title, message, duration):
+        raise RuntimeError("notifications off")
+
+    NS["send_toast"](broken, "Baldur: bad posture", "Sit upright.", "short")
+    out = capsys.readouterr().out.strip()
+    assert "toast unavailable" in out
+    assert "Baldur: bad posture" in out

@@ -39,5 +39,24 @@ This file is initializer instructor of my project. I will explain general purpos
 	  I will explain technical details step by step
 	  
 	  
-	  Warning will be C#, .NET 9, WPF project
+	  Warning will be C#, .NET 12, WPF project
+
+	# Warning
+	- Project will be C#, .NET 12, WPF project
+	- It will fire when Posture Recognition event triggers bad_posture event
+	- It will work from background but the application will be started manually.
+	- There will be 2 features
+	- First feature is warning message 
+	  It will pop-up a message above everything
+	  There will be configuration flag which name is IS_WARNING_WINDOW_CLOSABLE. If it is true user can close window. If false, user can't
+	- Message window design properties described below
+	  Screen with flashing text and borders
+	  FLashing should be below 3Hz
+	  At the very top, the text "STAND TALL!!!" in capital letters
+	  Below that, centered, the image "kyphosis.jpg" located in this folder
+	- Second feature is blocking mouse events
+	  User can't control movement, wheel, left and right click events.
+	  There will be configuration flag which name is IS_MOUSE_EVENTS_ENABLED. If it is true, system will block mouse events. If it is false, system won't block mouse events
+	  There will be failsafe condition if engine dies mid-block
+	- If recovery event triggers from Posture Recognition side, message will close and user can use mouse events again
 	  

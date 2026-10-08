@@ -1,0 +1,14 @@
+TEST SCENARIOS - preview parity addendum (issue #16, owner: no big changes)
+Minimal fix only: pass RULA extra + plotted base into the existing
+annotate call. Scoring still flows solely through infer_frame; display
+failures fall back silently. Headless path untouched.
+
+SCENARIOS:
+P8. RULA extra: slouch frames -> annotate receives "RULA <grand>/A<action>";
+    empty frames -> "RULA --". Values come from the notebooks' own
+    note_torso/grand_score (reuse, threaded torso baseline).
+P9. Plotted base: imshow receives raw[0].plot() (YOLO boxes+skeleton,
+    pixel-identical to the 05 viewer); empty results -> raw frame.
+P10. Display fallback: raw display call failing (or plot missing) keeps
+    the raw frame, emits no error event, exit stays 0. Scoring errors
+    still flow only through infer_frame with stable codes.

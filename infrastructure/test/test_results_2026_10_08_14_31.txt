@@ -1,0 +1,45 @@
+TEST RESULTS - BaldurSetup-1.0.0.exe, both parts (issues #11, #16)
+Scope: full offline installer. Warning self-contained single-file
+1.0.0; frozen Recognition engine (PyInstaller onedir, interpreter +
+torch/ultralytics/cv2/numpy embedded, notebooks + weights as data);
+per-user Inno install (no admin), Start Menu shortcut, clean uninstall.
+No ipynb-to-py conversion was needed: the frozen bundle carries the
+notebooks as data and engine._base_dir resolves them via sys._MEIPASS,
+so the notebooks stay the single source of truth (no-duplication rule
+held, guards green).
+Date: 2026-10-08 14:31 local
+
+Verified:
+- Warning publish fresh (147.8MB, v1.0.0, window icon embedded).
+- Frozen engine.exe (33MB + _internal): invalid source -> single frozen
+  CAMERA_UNAVAILABLE error on stdout, exit 2; model loads from the
+  bundle (yolo26n-pose.pt, cpu); stdout parse-check frozen-only.
+- PyInstaller lessons recorded: exec-loaded deps are invisible to
+  static analysis (needed hidden-imports for numpy/torch/ultralytics/
+  cv2/PIL/yaml); torch submodules (distributed, torchgen, testing)
+  must NOT be excluded (hard imports at torch load); dev-only trees
+  (polars/matplotlib/IPython/pytest/sympy/networkx/...) excluded or a
+  hook subprocess crashes the build; OpenCV ships ffmpeg-only videoio
+  (matches the venv; no MSMF/DShow gap introduced).
+- Installer compile: ISCC 0 errors, BaldurSetup-1.0.0.exe 200.6MB.
+- Silent install to a test dir: layout exact (Warning\Warning.exe,
+  engine\engine.exe, _internal\notebooks x6, _internal\weights\yolo26n-
+  pose.pt); silent uninstall removed everything (dir gone).
+- New repo file: installer/Baldur.iss (AppId fixed, per-user paths,
+  optional desktop/startup tasks default off, Run-once launch checkbox
+  default off, %APPDATA% config documented as kept).
+
+Not verified here (user-side gates):
+- Live camera inference from the frozen exe (camera busy during this
+  session: dev probe also failed to open source=0; bundle matches venv
+  backends, so this is environmental).
+- True popup E2E from installed layout (needs a person slouching).
+- Fresh-machine acceptance B1-B6/F1-F3 (needs a second PC).
+- ProductionBoot._internal\weights lookup (unit-tested) end-to-end.
+
+Owner-side blockers (unchanged, block public release only):
+- Code signing cert (unsigned hook binary will trip SmartScreen/AV).
+- kyphosis.jpg redistribution license.
+Delivered (uncommitted, no commit per standing rule): engine.py
+(_MEIPASS base dir), ProductionBoot.cs (_internal weights lookup),
+tests (+2), installer/Baldur.iss, B:\baldur-dist\BaldurSetup-1.0.0.exe.

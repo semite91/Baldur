@@ -1,0 +1,11 @@
+TEST SCENARIOS - preview X-close (issue #16, owner order)
+The cv2 window's X button only destroys the window; the next imshow
+recreates it, so the loop must notice. Check WND_PROP_VISIBLE after
+waitKey; invisible means the user pressed X. Uses the 05 namespace's own
+cv2 object (no new imports, guards unaffected).
+
+SCENARIOS:
+P13. X pressed (visible property 0) -> loop stops, exit 0, camera
+     released, windows destroyed (same clean path as q).
+P14. Property unsupported (raises) -> assume visible, keep running, no
+     error event (never kill a working preview for a missing probe).

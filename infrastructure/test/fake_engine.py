@@ -18,7 +18,8 @@ def emit(event, **fields):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default="count",
-                        choices=("count", "script", "malformed", "infinite", "spam"))
+                        choices=("count", "script", "malformed", "infinite", "spam",
+                                 "cycle", "die-after"))
     parser.add_argument("--count", type=int, default=10)
     parser.add_argument("--interval", type=float, default=0.1)
     args = parser.parse_args()
@@ -46,6 +47,19 @@ def main():
             print(f"diagnostic chatter {index}", file=sys.stderr, flush=True)
         for _ in range(5):
             emit("heartbeat", score=78)
+    elif args.mode == "cycle":
+        while True:
+            emit("heartbeat", score=78)
+            time.sleep(0.2)
+            emit("bad_posture", score=64, dwell_s=10)
+            time.sleep(3.0)
+            emit("recovered", score=82, dwell_s=3)
+            time.sleep(3.0)
+    elif args.mode == "die-after":
+        for _ in range(args.count):
+            emit("heartbeat", score=78)
+            time.sleep(args.interval)
+        sys.exit(1)
     else:
         while True:
             emit("heartbeat", score=78)

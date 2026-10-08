@@ -1,0 +1,33 @@
+TEST SCENARIOS - Setup.exe with both parts (issues #11 packaging, #16 engine)
+Owner direction: implement all, both parts, do not skip. This file is the
+confirm (workflow steps 2-4). Production boot replaces dev env flags; the
+dismiss path (ESC/ENTER -> hide + unblock + re-arm, window never closed)
+is restored because a setup cannot ship a stuck mouse.
+
+SCENARIOS:
+B1. Production boot without any BALDUR_* env: tray appears, side-by-side
+    engine launches, heartbeat flow runs, no console window, no crash.
+B2. Second launch while running exits quietly without side effects.
+B3. Missing engine (no side-by-side exe, no env override) -> clean
+    shutdown with a stderr reason, never a hung tray.
+B4. Config relocation: first run seeds %APPDATA%\Baldur\WarningConfig.json
+    with defaults; edits there take effect on next launch; uninstall keeps
+    it (documented).
+B5. bad_posture opens the fullscreen warning; recovered hides it (E2E with
+    the real engine; host stderr shows rx/show/hide lines as evidence).
+B6. ESC and ENTER both dismiss (hide + unblock + re-arm); next
+    bad_posture re-shows (window never closed).
+P1-P7 engine --preview scenarios stand (test_scenarios_2026_10_06_23_46).
+F1. dotnet publish self-contained single-file win-x64 runs on a machine
+    with no SDK/runtime (this machine's published exe smoked via
+    heartbeat-only fake: alive 15s, second launch exits, then killed).
+F2. PyInstaller onedir frozen engine: headless smoke shows the frozen
+    error event + exit 2 with no camera; stdout parse-check frozen-only.
+F3. Inno Setup compiles BaldurSetup (Warning single-exe + engine folder +
+    default config + Start Menu shortcut, per-user, no admin); uninstall
+    removes the install dir.
+G1. Unsigned-binary reality: SmartScreen/Defender will flag the hook;
+    documented for the owner; signing cert procurement stays owner-side
+    (blocks public release, not the build).
+G2. kyphosis.jpg redistribution license still unconfirmed (blocks public
+    release, not the build).

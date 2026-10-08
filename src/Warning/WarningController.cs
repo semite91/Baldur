@@ -8,6 +8,15 @@ public interface IWarningView
     void Show();
     void Hide();
     void ShowError(string message);
+
+    /// <summary>Raised by the view on ENTER: the host answers with the shared
+    /// teardown (hide plus unblock plus episode reset), same as recovered.
+    /// ESC instead raises QuitRequested: the boot wiring exits the app.</summary>
+    event Action? DismissRequested;
+
+    /// <summary>Raised by the view on ESC: the boot wiring runs the full
+    /// quit path (same as tray Quit), closing the app completely.</summary>
+    event Action? QuitRequested;
 }
 
 /// <summary>Routes engine events to the warning view, once per episode.
@@ -17,6 +26,10 @@ public interface IWarningView
 public sealed class WarningController(IWarningView view)
 {
     private bool _shown;
+
+    /// <summary>Forget the current episode so the next bad_posture shows
+    /// again. Called by the shared dismiss/recovered teardown.</summary>
+    public void Reset() => _shown = false;
 
     public void Handle(EngineEvent e)
     {

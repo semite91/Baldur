@@ -1,0 +1,28 @@
+TEST RESULTS - ESC quits app / ENTER hides (issue #16, owner-confirmed split)
+Scope: ESC runs the full tray-quit path (window, engine, tray, process);
+ENTER keeps the shared hide+unblock+rearm (app stays in tray). Both boot
+paths (ManualTestBoot, ProductionBoot) share one guarded Quit function
+(double-ESC cannot double-Shutdown). Supersedes the "both dismiss" design
+recorded in test_results_2026_10_06_22_45.txt.
+Runner: dotnet build + dotnet test Baldur.sln
+Date: 2026-10-07 10:08 local
+
+78 xUnit passed, 0 failed:
+- EscapeRaisesQuitWithoutDismiss: ESC fires QuitRequested only.
+- EnterRaisesDismissWithoutQuit: ENTER fires DismissRequested only.
+- OtherKeysDoNotDismiss: Space fires neither.
+- Host EscapeDismiss + controller Reset tests unchanged green (ENTER path
+  untouched); all 3 fakes carry both events (compiler-enforced).
+- Boot wiring (window Quit -> process exit) is headless-untestable by
+  design (needs a real Application): manual E2E gate below.
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/WarningController.cs (QuitRequested on the interface),
+src/Warning/WarningWindow.xaml.cs (DismissOnKey split),
+src/Warning/ManualTestBoot.cs + ProductionBoot.cs (shared guarded Quit,
+both tray and window subscribed), tests/Warning.Tests fakes +
+WarningWindowTests rewritten.
+Manual E2E gate (user-side, real engine + preview recipe): slouch ->
+modal; ESC -> tray icon gone AND dotnet process returns; relaunch ->
+ENTER on modal -> hides, mouse free, app stays; next slouch re-shows.
+Issue #16 stays OPEN until gates recorded.

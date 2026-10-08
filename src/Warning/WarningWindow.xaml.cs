@@ -16,6 +16,7 @@ public partial class WarningWindow : Window, IWarningView
     private bool _dismissed;
     private bool _systemClose;
     private bool _rendered;
+    private bool _wasActive = true;
     private bool _lit;
 
     public WarningWindow()
@@ -28,8 +29,38 @@ public partial class WarningWindow : Window, IWarningView
         _config = config;
         InitializeComponent();
         _flashTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _flashTimer.Tick += (_, _) => ToggleFlash();
-        IsVisibleChanged += (_, _) => ApplyFlashPolicy();
+        _flashTimer.Tick += (_, _) =>
+        {
+            if (WarningPolicy.ShouldFlash(_config.FlashEnabled, IsVisible, _rendered))
+            {
+                ToggleFlash();
+            }
+            EnsureKeyboardFocus();
+            if (IsVisible && IsActive != _wasActive)
+            {
+                _wasActive = IsActive;
+                LogFocus("tick");
+            }
+        };
+        IsVisibleChanged += (_, _) =>
+        {
+            // The window must own keyboard focus or dismiss keys land in
+            // whatever app had it (preview window, terminal, VS Code) and
+            // the mouse block stops the user from clicking back. Focus is
+            // re-asserted on every tick while visible because background
+            // processes cannot rely on a single Activate winning.
+            if (IsVisible)
+            {
+                Activate();
+                _flashTimer.Start();
+                LogFocus("shown");
+            }
+            else
+            {
+                _flashTimer.Stop();
+                _wasActive = true;
+            }
+        };
         if (System.Windows.Application.Current is not null)
         {
             System.Windows.Application.Current.SessionEnding += (_, _) => _systemClose = true;
@@ -69,19 +100,36 @@ public partial class WarningWindow : Window, IWarningView
     {
         base.OnContentRendered(e);
         _rendered = true;
-        ApplyFlashPolicy();
-    }
-
-    private void ApplyFlashPolicy()
-    {
-        if (WarningPolicy.ShouldFlash(_config.FlashEnabled, IsVisible, _rendered))
+        if (IsVisible)
         {
             _flashTimer.Start();
         }
-        else
+    }
+
+    /// <summary>Pull keyboard focus back while visible; no-op when hidden
+    /// or already active. Returns true when activation was attempted.
+    /// Public for unit tests.</summary>
+    public bool EnsureKeyboardFocus()
+    {
+        if (!IsVisible || IsActive)
         {
-            _flashTimer.Stop();
+            return false;
         }
+        Activate();
+        Focus();
+        return true;
+    }
+
+    /// <summary>E2E ground truth: reports whether this window owns
+    /// activation and keyboard focus. The engine child's pipes hide all
+    /// of this, so without the log a dead key is indistinguishable from
+    /// a dead handler. Console-less launches drop these lines silently.</summary>
+    private void LogFocus(string stage)
+    {
+        var focused = System.Windows.Input.Keyboard.FocusedElement;
+        Console.Error.WriteLine(
+            $"baldur[focus] {stage} visible={IsVisible} active={IsActive} " +
+            $"focused={(focused is null ? "none" : focused.GetType().Name)}");
     }
 
     protected override void OnClosing(CancelEventArgs e)
@@ -96,12 +144,38 @@ public partial class WarningWindow : Window, IWarningView
 
     private void OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == System.Windows.Input.Key.Escape)
-        {
-            _dismissed = true;
-            Close();
-        }
+        DismissOnKey(e.Key);
     }
+
+    /// <summary>Keyboard dismissal: ENTER hides the warning (host teardown,
+    /// app keeps running); ESC quits the app completely (boot wiring runs
+    /// the tray-quit path). Returns true when the key was handled. The
+    /// window is never closed here so ENTER keeps it re-showable.</summary>
+    public bool DismissOnKey(System.Windows.Input.Key key)
+    {
+        if (key is System.Windows.Input.Key.Escape)
+        {
+            // Never Close() here: the boot quit path owns shutdown order
+            // (window, engine, tray, process).
+            _dismissed = true;
+            QuitRequested?.Invoke();
+            return true;
+        } 
+        if (key is System.Windows.Input.Key.Enter)
+        {
+            // Never Close() here: a closed WPF window cannot re-Show, and
+            // the mouse block lives in the host. The host answers with the
+            // shared teardown (hide plus unblock plus episode reset).
+            _dismissed = true;
+            DismissRequested?.Invoke();
+            return true;
+        }
+        return false;
+    }
+
+    public event Action? DismissRequested;
+
+    public event Action? QuitRequested;
 
     private void ToggleFlash()
     {

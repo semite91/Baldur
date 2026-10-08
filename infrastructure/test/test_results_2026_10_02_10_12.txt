@@ -1,0 +1,26 @@
+TEST RESULTS - forced background warning, testing only (no issue)
+Tool: winotify 1.1.0 (freshly installed in B:\venvs\baldur; pure Python).
+Scope: one pure toast cell plus one LIVE toast loop cell in 05. Testing
+scaffolding only: never enters the frozen contract, engine.py, or Warning.
+Scenarios: infrastructure/test/test_scenarios_2026_10_02_10_07.txt (5 atomic)
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-02 10:12 local
+
+117 passed, 0 failed (114 prior + 3 toast):
+- bad transition fires exactly one toast, further bad frames none
+- recovery transition fires exactly one recovery toast
+- failing backend degrades to a printed line, loop survives
+
+Delivered: toast_on_transition (edge-triggered, returns new state) and
+send_toast (never raises) as tested pure cells; LIVE loop mirrors the 04
+chain (tuple presence, on_error break, warmup-less single pass) with toasts
+on dwell flips and q-less stop via notebook Stop button.
+For the user: flip RUN_LIVE (or BALDUR_LIVE=1), minimize everything, slouch
+10s -> system toast over desktop; sit up 3s -> recovery toast. If no toast
+appears, check Windows Settings -> Notifications first (degrade path covers).
+
+Audits:
+- nbformat.validate(05): clean, 8 cells; headless execute: 0 outputs
+- tests/__pycache__ removed after run
+
+SRS deltas (workflow step 8): none.

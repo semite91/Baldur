@@ -110,6 +110,8 @@ public sealed class WarningControllerTests
         public void Show() => Shows++;
         public void Hide() => Hides++;
         public void ShowError(string message) => Errors.Add(message);
+        public event Action? DismissRequested;
+        public event Action? QuitRequested;
     }
 
     private static EngineEvent Named(string name) =>
@@ -135,6 +137,17 @@ public sealed class WarningControllerTests
         controller.Handle(Named("recovered"));
         Assert.Equal(1, view.Shows);
         Assert.Equal(1, view.Hides);
+    }
+
+    [Fact]
+    public void ResetRearmsEpisode()
+    {
+        var view = new FakeView();
+        var controller = new WarningController(view);
+        controller.Handle(Named("bad_posture"));
+        controller.Reset();
+        controller.Handle(Named("bad_posture"));
+        Assert.Equal(2, view.Shows);
     }
 
     [Theory]

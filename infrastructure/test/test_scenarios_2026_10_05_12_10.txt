@@ -1,0 +1,35 @@
+TEST SCENARIOS - T8r duplication-free engine.py (follows #9, implementation discarded)
+Rule: engine.py is thin composition only. All domain logic (camera seam,
+scoring, dwell, inference) is reused from notebook namespaces via
+tests/nb_loader; engine.py must not redefine any notebook def/class.
+Manual confirm required before code (workflow steps 2-4).
+
+SCENARIOS:
+E1. import-only safety: `import engine` (without calling main) touches no
+    hardware, opens no camera, loads no model, prints nothing.
+E2. missing camera (headless, injectable open_camera fails): exactly one
+    frozen `error` line on stdout (code CAMERA_UNAVAILABLE), human detail
+    on stderr only, process exit non-zero, camera released.
+E3. slouch chain via fakes (10s score<70): exactly one `bad_posture`;
+    then 3s score>=80: exactly one `recovered`; heartbeat every 5s of
+    silence; all stdout lines parse as frozen events (bad_posture,
+    recovered, heartbeat, error) and nothing else.
+E4. occlusion parity with 02: present-but-illegible accrues its own clock
+    toward bad_posture at the same 10s bar; absent (None) freezes dwell.
+E5. stdout purity under chatter: model/camera diagnostics and stderr spam
+    never appear on stdout (parse-check every line).
+E6. no-duplication guard: engine.py source defines none of the notebook
+    domain names (posture_score, select_largest_person, new_state, update,
+    safe_update, emit_event, emit_error, load_pose_model, extract_persons,
+    infer_frame, open_camera, ...); it may only load namespaces and
+    orchestrate the 04 chain.
+E7. warmup + break-on-error: one warmup infer discarded before the loop;
+    inference exception mid-loop releases the camera and ends with an
+    `error` event plus non-zero exit (no second engine, no hang).
+E8. LIVE (user-side, camera machine): `python engine.py` smoke — real
+    slouch 10s yields bad_posture on stdout; tall 3s yields recovered;
+    stdout verified frozen-lines-only by parse check. Recorded run, not
+    run by agent headless.
+E9. Warning-host integration (final criterion): real engine stdout piped
+    into EngineHost/AppHost fake-view harness yields show/hide/error
+    transitions; then MANUAL E2E with the real window (user-side).

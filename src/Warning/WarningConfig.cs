@@ -6,7 +6,7 @@ namespace Baldur.Warning;
 
 /// <summary>Warning-stage configuration. Missing file means defaults.</summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed record WarningConfig(bool IsWarningWindowClosable = true, bool FlashEnabled = true)
+public sealed record WarningConfig(bool IsWarningWindowClosable = true, bool FlashEnabled = true, bool IsMouseEventsEnabled = false)
 {
     public static WarningConfig Load(string path)
     {

@@ -1,0 +1,26 @@
+TEST RESULTS - preview X-close (issue #16, P13-P14)
+Scope: the cv2 X button only destroys the window while the loop's next
+imshow silently recreates it. _preview_frame now also probes
+WND_PROP_VISIBLE after waitKey; invisible means X was pressed and takes
+the same clean quit path as q (exit 0, camera released, windows
+destroyed). Unsupported backends assume visible and keep running.
+Scenarios: infrastructure/test/test_scenarios_2026_10_07_12_13.txt.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-07 12:13 local
+
+145 pytest passed (143 pre-existing untouched + 2 new):
+- P13 X-close (property 0) -> exit 0, camera released, destroyed once.
+- P14 property raising -> all frames shown, exit 0, stdout empty.
+- Guards green unchanged (no new notebook names, stdlib-or-loader
+  imports, no stdout prints).
+- Suite hygiene: __pycache__/.pytest_cache removed after runs.
+
+Delivered (uncommitted, no commit per standing rule): engine.py
+(visibility probe in _preview_frame), tests/test_engine.py (window
+property stub members, +2 tests), scenarios file.
+Behavior note: X on the camera window quits engine.py (like q); it
+cannot merely hide the window because OpenCV recreates closed windows
+on the next imshow. In E2E this ends the engine child (host takes the
+error path), so use ENTER/ESC for the modal and X/q only to stop the
+preview itself.
+Issue #16 stays OPEN until live gates recorded.

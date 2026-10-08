@@ -1,0 +1,27 @@
+TEST RESULTS - session-overwrite recovery, second wave (issues #6/#7 scope)
+Trigger: user session left RUN_LIVE = True committed in the 05 switch cell
+(plus earlier reverts of 01/04/05 content). Headless 05 hung 180s on camera
+open instead of skipping; guard test caught the True on next suite run.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-02 11:11 local
+
+118 passed, 1 skipped (live smoke needs Temp image):
+- test_no_hardcoded_live_enablers: PASS (caught the committed True)
+- All toast/overlay/chain/score/RULA suites: PASS (overwritten cells were
+  rebuilt from verified content; suite proves restoration)
+- 01 facing/bands/tables/grand, 04 presence-tuple/break, 05 overlay/grand/
+  capture/run-switch: all present and exercised
+
+Findings for process:
+- RUN_LIVE = True committed breaks headless verify by HANGING (camera open
+  with no timeout), not just erroring: stronger reason for the ban test.
+- Manual cells (viewer loops, switch flags) are the fragile surface: every
+  user session edit there must be followed by suite + headless re-verify.
+- Uncommitted work remains fragile: close-outs (#6, #7) plus live outputs
+  would make any overwrite a one-command recovery.
+
+Audits:
+- 6 notebooks validate clean; headless 05 executes with 0 live outputs
+- tests/__pycache__ removed after run
+
+SRS deltas (workflow step 8): none (restoration only).

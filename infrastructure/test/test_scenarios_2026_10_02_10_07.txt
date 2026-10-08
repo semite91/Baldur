@@ -1,0 +1,15 @@
+TEST SCENARIOS ADDENDUM - forced background warning, testing only (no issue)
+Scope: one LIVE test cell in 05 (winotify toasts on dwell transitions).
+Explicitly NOT product: never enters the frozen contract, engine.py, or the
+deferred Warning stage. winotify 1.1.0 pinned in B:\venvs\baldur.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+53. bad_posture transition (in_bad False->True) fires exactly one toast;
+    further bad frames fire none (edge, not level)
+54. recovery transition fires exactly one recovery toast
+55. toast backend failure (e.g. notifications disabled) degrades to a printed
+    line; loop continues, camera still released on quit
+56. headless/pytest runs never touch toast code (LIVE-marked, env-guarded)
+57. live manual gate: minimized app, 10 slouch seconds -> system toast visible
+    over desktop; 3 upright seconds -> recovery toast

@@ -1,0 +1,37 @@
+TEST RESULTS - engine.py --preview flag (issue #16, P1-P6)
+Scope: --preview CLI flag -> run(preview=True); overlay reuses the
+05_live_view namespace (annotate_frame + its own cv2 module object) loaded
+lazily only when preview is on; q quits cleanly; GUI/load failure ->
+frozen error event + exit 3. Scenarios:
+infrastructure/test/test_scenarios_2026_10_06_23_46.txt (P1-P7).
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-06 23:49 local
+
+137 pytest passed (132 pre-existing untouched + 5 new):
+- P1 preview shows once per frame ("Baldur posture"), destroyAllWindows
+  exactly once, stdout frozen-only, exit 0; empty frames annotate with
+  (box None, score None, in_bad False).
+- P2 slouch overlay parity: 4-tuple int box, score < 70, in_bad True at
+  frame 10; box corners mirror the 05 viewer (visible keypoints scaled).
+- P3 q quits: loop stops, exit 0, camera released, windows destroyed.
+- P4 imshow raising -> frozen error event, camera released, exit 3.
+- P5 05/cv2 unloadable -> single PREVIEW_UNAVAILABLE error, exit 3, and
+  the camera is never opened (viewer loads before camera open).
+- P6 guards green unchanged: no notebook names defined in engine.py
+  (_preview_frame/_VIEW_STEMS/_PREVIEW_WINDOW are underscore-private),
+  stdlib-or-loader imports only (no cv2 import in engine.py), no stdout
+  prints. Note: viewer loads lazily only under --preview, so the
+  headless path never touches 05/cv2.
+- Suite hygiene: __pycache__/.pytest_cache removed after runs.
+- Headless smoke (default path, --frames 3): exit 0, stdout empty,
+  frozen-only PASS. Notable: the camera OPENS on this host now (model
+  loaded, 3 frames inferred, "done") -- earlier CAMERA_UNAVAILABLE is
+  gone, so the user can run the P7 live preview gate here.
+
+Delivered (uncommitted, no commit per standing rule): engine.py
+(--preview flag, _VIEW_STEMS/_PREVIEW_WINDOW, lazy viewer load before
+camera open, _preview_frame helper, q-break, guarded destroy),
+tests/test_engine.py (+5 preview tests with stub cv2), scenarios file.
+Pending user-side gate P7: `B:\venvs\baldur\Scripts\python.exe engine.py
+--preview` on the camera machine (live score + border, q quits).
+Issue #16 stays OPEN until P7 (and E8/E9) recorded.

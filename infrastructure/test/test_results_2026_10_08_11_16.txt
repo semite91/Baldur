@@ -1,0 +1,38 @@
+TEST RESULTS - Taskbar (window) icon (owner-approved scope: window + case fix)
+Scope: WarningWindow.Icon set so the running taskbar button and Alt+Tab
+show Baldur art instead of the Windows default. Desktop exe icon
+unchanged (ApplicationIcon .ico, delivered earlier).
+Runner: dotnet build + dotnet test (per-project; solution builds flake
+on the wpftmp copy step in this environment, unrelated to code)
+Date: 2026-10-08 11:16 local
+
+79 xUnit passed, 0 failed.
+
+Findings:
+F1. An .ico file is not packed as a WPF Resource by this SDK setup
+    (evaluated as an item, verified absent from Warning.g.resources),
+    so Window.Icon over the .ico failed with Cannot locate resource.
+    Used Assets/Baldur.png instead (standard WPF practice); the .ico
+    remains the exe icon only. This was a same-scope substitution, no
+    extra files.
+F2. The pack URI must be assembly-qualified
+    (pack://application:,,,/Warning;component/Assets/Baldur.png, same
+    form as the existing kyphosis Image). The short form resolves
+    against the ENTRY assembly, which is testhost under xUnit (and
+    would also break any future multi-assembly hosting) while working
+    by accident in the exe.
+F3. No new test was needed: all 8 window-constructing tests fail fast
+    on an unresolvable Icon (proven: 8 red before the fix, 79 green
+    after), so the suite now guards the icon URI.
+F4. Resource staleness red herring: new Resource items DO pack on a
+    genuine rebuild; earlier misses were stale test-bin copies of
+    Warning.dll (incremental reference-copy skips). Per-project
+    rebuilds are the reliable loop here until the solution-level
+    wpftmp flake is addressed separately.
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/WarningWindow.xaml (Icon attribute),
+src/Warning/Warning.csproj (Baldur.png Resource include; Baldur.ico
+include reverted as unusable for this purpose).
+User-side gate: run the app; the running taskbar button and Alt+Tab
+card must show Baldur art. Tray icon still unset (separate scope).

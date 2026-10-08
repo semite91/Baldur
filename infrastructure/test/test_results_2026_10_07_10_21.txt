@@ -1,0 +1,31 @@
+TEST RESULTS - Focus hardening: re-assert activation while visible (#16)
+Scope: ESC and ENTER both dead live while unit routing is green proves
+the modal never holds keyboard focus (preview/terminal/VS Code owns it;
+background processes cannot rely on one Activate winning). The 500ms
+timer now re-asserts Activate()+Focus() whenever visible-but-inactive,
+independent of the flash config; flash toggling stays policy-gated
+inside the same tick.
+Runner: dotnet build + dotnet test Baldur.sln
+Date: 2026-10-07 10:21 local
+
+79 xUnit passed (78 pre-existing + 1 new FocusEnsureIsNoOpWhileHidden),
+0 failed. DismissOnKey routing tests unchanged green.
+Note: live focus delivery itself is only provable on a screen (manual
+gate below); the suite proves routing + no-op safety headlessly.
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/WarningWindow.xaml.cs (tick re-asserts focus while visible;
+timer lifetime tied to visibility, not flash; ApplyFlashPolicy folded
+into the tick; public EnsureKeyboardFocus),
+tests/Warning.Tests/WarningWindowTests.cs (+1).
+Side effect of the live session: the user's stuck Warning instance
+(PID 18288, unquittable since ESC was dead) blocked the build via an
+exe lock; killed by agent to free the mouse and rebuild. If keys ever
+die again with the mouse blocked, Ctrl+C the dotnet terminal or
+taskkill /IM Warning.exe /F from any terminal.
+Manual E2E gate (user-side, preview recipe): slouch -> modal; WITHOUT
+clicking anything, press ESC (full quit: tray gone, process returns)
+on one run and ENTER (hide, stays running) on the next. Known
+limitation: Alt+Tabbing away mid-block is pulled back within ~500ms;
+that is the modal-block semantics, not a bug.
+Issue #16 stays OPEN until gates recorded.

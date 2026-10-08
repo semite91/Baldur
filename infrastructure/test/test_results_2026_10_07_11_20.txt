@@ -1,0 +1,30 @@
+TEST RESULTS - preview parity: RULA extra + plotted base (issue #16, P8-P10)
+Scope: minimal fix per owner (no restructuring). Preview overlay now
+passes extra="RULA <grand>/A<action>" (or "RULA --") from the notebooks'
+own note_torso/grand_score, and shows raw[0].plot() (YOLO boxes+skeleton,
+pixel-identical to the 05 viewer) with silent fallback to the raw frame.
+Scoring still flows solely through infer_frame; display failures emit no
+events. Scenarios: test_scenarios_2026_10_07_10_30.txt.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-07 11:20 local
+
+141 pytest passed (137 pre-existing untouched + 3 new, 1 extended):
+- P8 RULA extra format on slouch frames; "RULA --" on empty frames.
+- P9 imshow receives the plotted object (identity-checked), raw frame
+  when no results.
+- P10 plot-missing results fall back to the raw frame: exit 0, camera
+  released, stdout empty (no error event from display).
+- Guards green unchanged (no new notebook names, stdlib-or-loader
+  imports, no stdout prints).
+- Headless smoke (default path): exit 0, frozen-only PASS.
+- Suite hygiene: __pycache__/.pytest_cache removed after runs.
+
+Delivered (uncommitted, no commit per standing rule): engine.py
+(torso_base threading, RULA extra, plotted-base-with-fallback,
+_preview_frame base+extra params), tests/test_engine.py (plot-capable
+helpers, 4-tuple annotate records, +3 tests), scenarios file.
+Cost note: preview runs 2 inferences/frame (score + display), roughly
+halving preview FPS vs headless; the single-call restructure stays
+declined per owner. User-side gate: engine.py --preview must now show
+skeleton + boxes + RULA text beside the score.
+Issue #16 stays OPEN until live gates recorded.

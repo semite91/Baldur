@@ -1,0 +1,30 @@
+TEST RESULTS - ManualTestBoot real-engine override (E9 enabler, issue #16)
+Scope: BALDUR_ENGINE_PYTHON / BALDUR_ENGINE_SCRIPT / BALDUR_ENGINE_ARGS
+override in ManualTestBoot.ResolveEngineCommand (pure, unit-tested);
+defaults preserve the fake wiring (python + fake_engine.py + BALDUR_MANUAL_FAKE
+or --mode cycle). New tests: tests/Warning.Tests/ManualTestBootTests.cs (4).
+Runner: dotnet test Baldur.sln
+Date: 2026-10-06 00:22 local
+
+66 xUnit passed (62 pre-existing + 4 new):
+- defaults resolve to python + fake_engine.py --mode cycle (unchanged behavior)
+- BALDUR_MANUAL_FAKE still honored; BALDUR_ENGINE_ARGS beats it
+- real-engine recipe resolves (venv python + <root>\engine.py + empty args)
+
+Infra note: `dotnet test Baldur.sln` hit a flaky WPF wpftmp copy race
+(OneDrive/AV file lock on fresh obj/ after obj cleanup); immediate rebuild
+passed with 0 errors and the per-project build compiled clean. No code
+impact; if it recurs, rebuild once more before investigating.
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/ManualTestBoot.cs (ResolveEngineCommand + Run uses it),
+tests/Warning.Tests/ManualTestBootTests.cs (new).
+E2E recipe for the user (webcam is exclusive: close the 05 viewer first):
+  $env:BALDUR_MANUAL_TEST=1
+  $env:BALDUR_ENGINE_PYTHON="B:\venvs\baldur\Scripts\python.exe"
+  $env:BALDUR_ENGINE_SCRIPT="<root>\engine.py"
+  $env:BALDUR_ENGINE_ARGS=""
+  dotnet run --project src/Warning/Warning.csproj
+Then slouch 10s -> fullscreen block, ESC frees, tall 3s -> auto-hide.
+Issue #16 stays OPEN until E8 (live engine smoke) and E9 (this E2E) are
+recorded by the user.

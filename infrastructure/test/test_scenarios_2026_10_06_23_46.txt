@@ -1,0 +1,24 @@
+TEST SCENARIOS - engine.py --preview flag (owner-confirmed scope, issue #16)
+Rule: overlay reuses 05_live_view.annotate_frame via the notebook loader;
+engine.py defines no overlay/scoring logic and imports no cv2 (uses the
+05 namespace's own cv2 module object). Headless default path unchanged.
+Manual confirm: owner chose the recommended option before build.
+
+SCENARIOS:
+P1. --preview with stub viewer: imshow fires once per frame with the
+    annotated overlay; destroyAllWindows fires exactly once on exit;
+    stdout stays frozen-only; exit 0.
+P2. Box/score overlay parity: slouch frames -> annotate receives a 4-tuple
+    int box, score < 70, in_bad True at frame 10; empty frames -> box None,
+    score None.
+P3. q quits: waitKey returning ord("q") stops the loop cleanly (exit 0,
+    camera released, windows destroyed).
+P4. Backend failure: imshow raising -> frozen error event on stdout,
+    camera released, exit 3.
+P5. Missing viewer (05/cv2 unloadable) with --preview -> frozen error
+    event on stdout, exit 3 (no traceback on stdout).
+P6. Guards unchanged: engine.py defines no notebook names, imports
+    stdlib-or-loader only, never prints to stdout.
+P7. LIVE (user-side, camera machine): `python engine.py --preview` opens
+    the "Baldur posture" window with live score + green/red border; q
+    quits; stdout parse-check stays frozen-only. Recorded run.

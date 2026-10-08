@@ -1,0 +1,36 @@
+TEST RESULTS - ENTER dismiss + 05 viewer idle hint (issue #16 E9 scope)
+Scope: (a) ENTER behaves exactly like ESC via shared teardown; scenarios
+in test_scenarios_2026_10_06_22_41.txt (K1-K5). (b) Both 05_live_view
+viewer cells print an idle hint when the live gate is off (previously a
+silent no-op, the most likely reason for "can't see camera output").
+Runner: dotnet test Baldur.sln --no-build ; pytest loader/live_view subset
+Date: 2026-10-06 22:45 local
+
+71 xUnit passed (68 pre-existing + 3 new), 13 pytest passed:
+- WarningWindow.DismissOnKey(Key): Enter/Escape -> true + DismissRequested
+  (host hides, unblocks, re-arms; window never closed); Space -> false,
+  no event. K1-K4 unit-proven; K5 covered by the existing re-arm path
+  (ResetRearmsEpisode + window stays alive, no Close on dismiss).
+- 05_live_view.ipynb: valid JSON after scripted edit, nb_loader imports
+  clean, both viewer cells carry the idle hint, guard texts absent
+  (no 'RUN_LIVE = True', no environ BALDUR_LIVE assignment), loader +
+  live_view tests green. Edit done via stdlib-json script (whole-file
+  Write banned for ipynb); the file's remaining diff vs HEAD is the
+  user's own prior run outputs, verified by inspection.
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/WarningWindow.xaml.cs (DismissOnKey), ManualTestBoot untouched,
+tests/Warning.Tests/WarningWindowTests.cs (+3), scenarios file above,
+notebooks/05_live_view.ipynb (idle hint in 2 viewer cells).
+
+Viewer diagnosis for the user (code is proven: stored outputs show a past
+run with heartbeats, bad_posture, live scores 87-94, stopped by the user):
+the viewer can only be silent when (1) gate off -> now prints the idle
+hint; (2) no camera on this host -> error JSON + "viewer finished";
+(3) wrong kernel (must be baldur for cv2/ultralytics/torch); (4) webcam
+busy (Warning E2E or another app holds source=0). Exact run recipe:
+kernel baldur, BALDUR_LIVE=1, RUN_LIVE=True, Run All, look for a native
+"Baldur posture" OS window (possibly behind VS Code), q quits, then flip
+RUN_LIVE back to False. If the window still never appears, paste the
+cell's output (error JSON / idle hint / traceback) back for analysis.
+Issue #16 stays OPEN until E8/E9 recorded.

@@ -67,4 +67,76 @@ public sealed class WarningWindowTests
             window.DismissForRecovery();
         }
     }
+
+    [StaFact]
+    public void EscapeRaisesQuitWithoutDismiss()
+    {
+        var window = new WarningWindow(new WarningConfig(IsWarningWindowClosable: true));
+        try
+        {
+            var quit = false;
+            var dismiss = false;
+            window.QuitRequested += () => quit = true;
+            window.DismissRequested += () => dismiss = true;
+            Assert.True(window.DismissOnKey(System.Windows.Input.Key.Escape));
+            Assert.True(quit);
+            Assert.False(dismiss);
+        }
+        finally
+        {
+            window.DismissForRecovery();
+        }
+    }
+
+    [StaFact]
+    public void EnterRaisesDismissWithoutQuit()
+    {
+        var window = new WarningWindow(new WarningConfig(IsWarningWindowClosable: true));
+        try
+        {
+            var quit = false;
+            var dismiss = false;
+            window.QuitRequested += () => quit = true;
+            window.DismissRequested += () => dismiss = true;
+            Assert.True(window.DismissOnKey(System.Windows.Input.Key.Enter));
+            Assert.True(dismiss);
+            Assert.False(quit);
+        }
+        finally
+        {
+            window.DismissForRecovery();
+        }
+    }
+
+    [StaFact]
+    public void OtherKeysDoNotDismiss()
+    {
+        var window = new WarningWindow(new WarningConfig(IsWarningWindowClosable: true));
+        try
+        {
+            var fired = false;
+            window.DismissRequested += () => fired = true;
+            Assert.False(window.DismissOnKey(System.Windows.Input.Key.Space));
+            Assert.False(fired);
+        }
+        finally
+        {
+            window.DismissForRecovery();
+        }
+    }
+
+    [StaFact]
+    public void FocusEnsureIsNoOpWhileHidden()
+    {
+        var window = new WarningWindow(new WarningConfig(IsWarningWindowClosable: true));
+        try
+        {
+            Assert.False(window.IsVisible);
+            Assert.False(window.EnsureKeyboardFocus());
+        }
+        finally
+        {
+            window.DismissForRecovery();
+        }
+    }
 }

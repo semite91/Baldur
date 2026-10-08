@@ -1,0 +1,42 @@
+TEST RESULTS - T8r duplication-free engine.py (issue #16)
+Scope: repo-root engine.py as thin composition over notebook namespaces
+(00/01/02/03 via tests/nb_loader, orchestration mirrors the 04 chain);
+tests/test_engine.py (14 tests incl. no-duplication/import/purity guards).
+Scenarios: infrastructure/test/test_scenarios_2026_10_05_12_10.txt (E1-E9,
+user-confirmed before code).
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/ ; dotnet test
+Date: 2026-10-05 12:20 local
+
+132 pytest passed (118 pre-existing untouched + 14 new), 62 xUnit passed:
+- E1 import safety: reload(engine) prints nothing, touches no hardware.
+- E2 missing camera: exactly one frozen error line on stdout
+  ({"event": "error", "code": "CAMERA_UNAVAILABLE", ...}), exit 2,
+  camera released. Headless host smoke: `python engine.py --frames 3`
+  -> same single error line, exit 2, 4 stderr lines, parse-check PASS
+  (every stdout line a frozen event).
+- E3 slouch->bad (10s, dwell_s 10, score<70) then tall->recovered (3s,
+  dwell_s 3, score>=80); heartbeats >= 2; all lines frozen; exit 0.
+  (Warmup consumes one infer: script sized 11+3 for 14 frames.)
+- E4 covered-person parity: strict scorer never abstains, so illegible
+  presence fires via the visible clock at 10s with score 0.0. The
+  (None, True) occluded clock in update() stays 02 unit scope for
+  abstaining scorers (posture_score doc: "never abstains").
+- E5 stdout purity: AST guard (no print() without file=sys.stderr in
+  engine.py) + frozen-set assertions on every chain test.
+- E6 no-duplication guard: engine.py defines none of the notebook
+  domain names (functions, classes, constants); imports stdlib-only
+  (argparse, json, sys, time, pathlib) plus tests/nb_loader. Weights
+  default resolves from NS03 MODEL_NAME/FALLBACK_MODELS at runtime, so
+  not even the filename literal is duplicated.
+- E7 warmup discards one infer (calls == frames+1); mid-loop inference
+  failure, warmup read failure, and mid-loop read failure each release
+  the camera, end with an error event, exit 3; Ctrl+C exits 0.
+- Suite hygiene: __pycache__/.pytest_cache removed after runs.
+
+Delivered (uncommitted, no commit per standing rule): engine.py (new),
+tests/test_engine.py (new), scenarios file above. Prior dirty work
+(W4 remainder + ManualTestBoot) untouched.
+Pending user-side gates: E8 live camera smoke (python engine.py real
+slouch->bad->recovered, stdout parse-check) and E9 Warning-host
+integration (real engine stdout into EngineHost, then fullscreen E2E).
+Issue #16 stays OPEN until E8/E9 are recorded.

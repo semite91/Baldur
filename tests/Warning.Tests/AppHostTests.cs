@@ -13,6 +13,9 @@ public sealed class AppHostTests
         public void Show() => Shows++;
         public void Hide() => Hides++;
         public void ShowError(string message) => Errors.Add(message);
+        public event Action? DismissRequested;
+        public void RaiseDismiss() => DismissRequested?.Invoke();
+        public event Action? QuitRequested;
     }
 
     private static string FakePath()
@@ -118,6 +121,19 @@ public sealed class AppHostTests
         Assert.True(SpinWait.SpinUntil(() => view.HideCalls > 0, TimeSpan.FromSeconds(30)));
     }
 
+    [Fact]
+    public void EscapeDismissHidesViewAndReleasesBlock()
+    {
+        var view = new FakeView();
+        var blocker = new MouseBlocker(blockingEnabled: false);
+        using var host = new AppHost(new EngineHost(), view, blocker);
+        blocker.Start();
+        Assert.True(blocker.IsHookInstalled);
+        view.RaiseDismiss();
+        Assert.Equal(1, view.Hides);
+        Assert.False(blocker.IsHookInstalled);
+    }
+
     private sealed class ThrowingView : IWarningView
     {
         public int HideCalls { get; private set; }
@@ -125,6 +141,8 @@ public sealed class AppHostTests
         public void Show() => throw new InvalidOperationException("no UI thread");
         public void Hide() => HideCalls++;
         public void ShowError(string message) => ErrorCalls++;
+        public event Action? DismissRequested;
+        public event Action? QuitRequested;
     }
 }
 

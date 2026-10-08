@@ -1,0 +1,43 @@
+TEST RESULTS - ESC fix: focus + shared teardown (E9 follow-up, issue #16)
+Scope: ESC did nothing live. Two root causes found by code inspection:
+(a) the fullscreen window never forced activation, so with the mouse
+blocked the user could not click it focused and ESC landed in whatever
+app had focus; (b) ESC ran Window.Close(), which neither stopped the
+mouse block (host-owned) nor re-armed the episode, and a closed WPF
+window cannot re-Show (next bad_posture would have died into
+"event handling failed").
+Changes (uncommitted, no commit per standing rule):
+- src/Warning/WarningWindow.xaml.cs: Activate() on IsVisibleChanged;
+  ESC now raises DismissRequested instead of Close() (window stays alive
+  and re-showable). Added the DismissRequested event.
+- src/Warning/WarningController.cs: IWarningView gains DismissRequested;
+  WarningController gains Reset() (episode re-arm).
+- src/Warning/AppHost.cs: subscribes DismissRequested (unsubscribes on
+  Dispose); OnEscapeDismiss runs the shared teardown through the UI
+  dispatcher when the view is real (direct for test fakes): Reset +
+  Hide + blocker Stop. Also repaired an editing slip that had renamed
+  OnEngineGone (caught before build, verified by suite).
+- tests: WarningPartsTests FakeView + event, ResetRearmsEpisode test;
+  AppHostTests FakeView/ThrowingView + event, EscapeDismissHidesViewAnd-
+  ReleasesBlock test (hook installed, dismiss, hook gone, Hides==1).
+Runner: dotnet build + dotnet test Baldur.sln (--no-build for the run)
+Date: 2026-10-06 00:29 local
+
+68 xUnit passed (66 pre-existing + 2 new), 0 failed.
+Infra note (recurring): solution builds intermittently fail on the WPF
+wpftmp copy step (OneDrive/AV lock on fresh obj/); immediate rebuild
+passes. Per-project build compiled clean throughout, so this stays a
+machine flake, not a code issue.
+
+User retest (E9, webcam exclusive: close the 05 viewer first):
+  $env:BALDUR_MANUAL_TEST=1
+  $env:BALDUR_ENGINE_PYTHON="B:\venvs\baldur\Scripts\python.exe"
+  $env:BALDUR_ENGINE_SCRIPT="C:\Users\samih\OneDrive\Desktop\Baldur\engine.py"
+  $env:BALDUR_ENGINE_ARGS=""
+  dotnet run --project src/Warning/Warning.csproj
+Slouch 10s -> fullscreen block; ESC must now hide the popup AND free the
+mouse (both at once); slouch again -> popup returns (re-arm); tall 3s ->
+auto-hide. Key delivery itself (fix a) is only provable on a live screen:
+if ESC still does nothing at all, report exactly that (window stays up)
+versus window-hides-but-mouse-stuck, they are different faults.
+Issue #16 stays OPEN until E8/E9 recorded.

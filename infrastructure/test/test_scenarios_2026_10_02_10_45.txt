@@ -1,0 +1,16 @@
+TEST SCENARIOS ADDENDUM - warning removal on recovery (issue #7 scope)
+Finding: explicit programmatic dismissal is unavailable from this stack
+(winotify exposes show only, no tags; WinRT history statics unprojected in
+winrt 3.2.1, which was installed, verified useless, and uninstalled again;
+unpackaged apps get transient popups anyway). Removal therefore EQUALS
+short-duration OS expiry plus recovery-toast supersede - both already the
+design; this work pins and documents it.
+Manual confirm required before code (workflow.md steps 2-4).
+
+SCENARIOS:
+58. warning_spec("bad") carries short duration; warning_spec("recovered")
+    carries short duration (expiry IS the removal mechanism)
+59. toast loop passes the spec duration to the sender (wired, manual-gated)
+60. live manual gate: slouch -> warning visible briefly then gone by itself
+    even without recovering; recover -> recovery toast; Action Center holds
+    no stale Baldur warning afterwards

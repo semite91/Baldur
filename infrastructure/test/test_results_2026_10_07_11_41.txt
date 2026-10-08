@@ -1,0 +1,24 @@
+TEST RESULTS - preview plotted-status line (issue #16, P11-P12)
+Scope: overlay gains a status line under the score reporting "plotted"
+when the base came from raw[0].plot() and "not plotted" on raw-frame
+fallback. Reuses the 05 box_color + cv2 module objects; no new drawing
+logic, no notebook edits. Scenarios:
+infrastructure/test/test_scenarios_2026_10_07_11_41.txt.
+Runner: B:\venvs\baldur\Scripts\python.exe -m pytest tests/
+Date: 2026-10-07 11:41 local
+
+143 pytest passed (141 pre-existing untouched + 2 new):
+- P11 plotted base -> putText "plotted" at (10, 90); score/RULA lines
+  unchanged (existing overlay tests still green).
+- P12 empty results -> putText "not plotted"; events and exit codes
+  unchanged (fallback test asserts exit 0 with empty stdout).
+- Guards green unchanged (no new notebook names, stdlib-or-loader
+  imports, no stdout prints).
+- Suite hygiene: __pycache__/.pytest_cache removed after runs.
+
+Delivered (uncommitted, no commit per standing rule): engine.py
+(plotted flag, status putText under the score via reused box_color),
+tests/test_engine.py (putText/box_color stubs, +2 tests), scenarios file.
+User-side gate: engine.py --preview shows "plotted" under the score when
+the skeleton is drawn, "not plotted" otherwise.
+Issue #16 stays OPEN until live gates recorded.

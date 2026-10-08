@@ -1,0 +1,26 @@
+TEST RESULTS - Manual-test harness entry point (W-track, unnumbered)
+Scope: env-gated boot wiring AppHost plus real window plus blocker plus tray
+against the fake engine; fake gains cycle and die-after modes; config gains
+IsMouseEventsEnabled (default false: blocking stays opt-in); App StartupUri
+removed with clean-exit default (production boot wires windows later).
+Runner: dotnet build plus dotnet test plus pytest
+Date: 2026-10-03 20:04 local
+
+118 pytest passed (98 fast plus 20 yolo incl. live smoke) and 62 xUnit passed:
+- fake cycle/die-after modes run correctly (validated by construction review;
+  no pytest covers the fake itself, consistent with its tooling status)
+- ManualTestBoot compiles into the warning-free solution; App boots clean
+  with and without the flag path compiled (manual run itself is user-side:
+  harness intentionally never runs headless - it opens real windows)
+- pre-existing suites green unchanged (config additive default preserved)
+
+Delivered: ManualTestBoot.cs (repo-root walk, dev config, tray with Quit,
+fake mode select via BALDUR_MANUAL_FAKE), App.xaml/cs branch, manual-config.json
+(both flags true for gates), fake cycle/die-after.
+Deliberately not run by agent: the harness opens a real fullscreen window;
+first execution belongs on the user's screen.
+Next: user runs BALDUR_MANUAL_TEST=1 sessions for Part 1/Part 2 gates, then
+the W-track close-outs reference the committed outputs.
+
+SRS deltas (workflow step 8): IsMouseEventsEnabled added to config (default
+false); StartupUri removal recorded (production boot pending, tracked).

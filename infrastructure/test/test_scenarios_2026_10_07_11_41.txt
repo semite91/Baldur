@@ -1,0 +1,10 @@
+TEST SCENARIOS - preview plotted-status line (issue #16, owner order)
+Overlay gains a status line under the score: "plotted" when the base
+image came from raw[0].plot(), "not plotted" on raw-frame fallback.
+Reuses the 05 box_color + cv2 module objects (no new drawing logic).
+
+SCENARIOS:
+P11. Plotted base -> putText fires with "plotted" at (10, 90) in the
+     dwell color; RULA/score lines unchanged.
+P12. Fallback base (empty results or display failure) -> putText fires
+     with "not plotted"; events and exit codes unchanged.

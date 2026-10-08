@@ -1,0 +1,39 @@
+TEST RESULTS - App icon + concurrent-editing incident (issues #11, #16)
+Scope: (a) Warning exe icon set to the owner's Baldur.png (copied to
+src/Warning/Assets, converted to 256px Baldur.ico, ApplicationIcon wired,
+embed verified via ExtractAssociatedIcon). (b) Diagnosis of 3 failing
+window tests + live dead keys + build flakiness.
+Runner: dotnet build + dotnet test Baldur.sln
+Date: 2026-10-08 04:52 local
+
+79 xUnit passed, 0 failed (after fixes below).
+
+Findings (all evidence-backed):
+F1. The 3 failures were NOT agent code: worktree WarningWindow.xaml had
+    been hand-edited at 04:11 (Title->Baldur, Topmost True->False,
+    ShowInTaskbar False->True) against the committed spec. Restored to
+    spec; suite green. The edit also explains live dead keys (a
+    non-topmost modal loses focus/visibility contests).
+F2. The earlier DismissOnKey unconditional block (missing `if (Escape)`)
+    is consistent with the same concurrent editing, not with any
+    deliberate change; method re-verified correct in source and green
+    in tests (ENTER=True SPACE=False via probe before removal).
+F3. Build flakiness (wpftmp copies, cache reads, phantom CoreCompile)
+    correlates with VS Code Dev Kit/SonarLint background builds plus
+    agent CLI builds plus OneDrive sync fighting over obj/, plus stale
+    MSBuild/VBCSCompiler nodes (killed once) and skipped restores
+    (fixed with --force). No code impact in any instance.
+F4. Probe method note: a temporary headed STA probe (real window +
+    script engine, deleted after use) was the instrument that separated
+    code faults from environment faults throughout.
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/Assets/Baldur.png (owner file) + Baldur.ico (generated),
+src/Warning/Warning.csproj (ApplicationIcon), restored XAML spec values.
+Request to owner: while the agent builds/tests, avoid editing or
+building in VS Code (background builds race the agent's and corrupt
+incremental state); the 04:11 XAML edit is restored, re-apply only if
+intentional. Live ESC/ENTER retest needs a fresh `dotnet run` (all
+binaries before this session predated the key fixes).
+Single-size ICO limitation: current .ico holds one image; large-icon
+views may scale softly. Multi-size ICO on request.
