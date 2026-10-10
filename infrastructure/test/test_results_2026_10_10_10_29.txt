@@ -1,0 +1,50 @@
+TEST RESULTS - #18 camera dialogs: probe, detection, resume, dialog (C1-C8)
+Scope: engine --probe (00-namespace fast path); EngineEvent.Code;
+AppHost camera-code detection, startup/mid-run split, TryResume with
+background probe + double-launch guard, dialog request/dismiss events;
+new CameraDialog window + both boots wiring; fake --mode error.
+Scenarios: test_scenarios_2026_10_10_10_05.txt. C9 live gates stay
+user-side.
+Runner: pytest (venv) + xUnit (per-project builds; solution builds
+flake on the wpftmp copy step in this environment)
+Date: 2026-10-10 10:29 local
+
+149 pytest passed + 1 pre-existing environmental skip
+(test_live_smoke ShapesAndIndices needs a temp sample image absent
+since earlier sessions; unrelated to this change). New: 4 probe tests.
+99 xUnit passed, 0 failed. New: 3 parse tests, 5 dialog tests,
+sign-of-life matrix (4), startup/mid-run dialog requests, non-camera
+death keeps fullscreen error, 3 TryResume tests, before-start guard.
+- C1 probe open/read/release, denied/read-fail single error + exit 2,
+  CLI source plumbing.
+- C2 error code parsed, heartbeat codeless, malformed still rejected.
+- C3 startup error (no prior life) requests canContinue=False and
+  shows NO fullscreen error instead.
+- C4 error after heartbeats requests canContinue=True.
+- C5 resume relaunches the dead engine exactly once; a second dialog
+  request proves the re-error cycle (initial TryResume-while-alive
+  race fixed by settling to parked pid 0 first).
+- C6 failing probe: exactly 1 probe run, no relaunch, dialog stays,
+  engine stays dead.
+- C7 die-after (no error events) keeps parked fullscreen error with
+  zero dialog requests (existing SingleRestart behavior preserved).
+- Dialog: message exact, Close-only vs both buttons by mode, button
+  clicks raise the right events, Closing raises quit exactly once.
+- Guards green unchanged (engine defines no notebook names,
+  stdlib-or-loader imports, no stdout prints).
+
+Delivered (uncommitted, no commit per standing rule): engine.py
+(probe_camera, --probe), tests/test_engine.py (+4),
+src/Warning/EngineEvent.cs (Code), src/Warning/AppHost.cs
+(detection, split, TryResume, probe runner, dialog events),
+src/Warning/CameraDialog.xaml(.cs) (new), ManualTestBoot.cs +
+ProductionBoot.cs (dialog show/hide wiring reusing guarded Quit),
+fake_engine.py (--mode error), tests (+19).
+Design notes: probe runs on a threadpool thread (UI never freezes);
+frozen-probe path is host-agnostic (file+args configured per boot;
+dev manual boot leaves it null = direct relaunch); heartbeat or any
+life sign hides an open dialog; ESC/X on the dialog quit via the
+existing path; resume Hide never triggers quit.
+Pending user-side C9: unplug-at-startup and unplug-mid-run drills,
+replug+Continue resume, tray-quit regression, fullscreen modal
+regression.

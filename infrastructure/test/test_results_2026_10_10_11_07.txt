@@ -1,0 +1,19 @@
+TEST RESULTS - CameraDialog visual tweaks (issue #18 follow-up, owner order)
+Scope: message text "Camera is unavailable !!!", LightGray background,
+buttons right-aligned, small symmetric margins (8px above text, 8px
+below buttons, 12px text-to-buttons). Height 180->150 to match.
+Runner: dotnet build + dotnet test (per-project)
+Date: 2026-10-10 11:07 local
+
+99 xUnit passed, 0 failed (2 message asserts updated to the new text;
+all behavior tests unchanged green).
+
+Delivered (uncommitted, no commit per standing rule):
+src/Warning/CameraDialog.xaml (4 tweaks),
+tests/Warning.Tests/CameraDialogTests.cs (2 asserts).
+Spec drift note: issue #18 and scenarios C3/C4 state the message as
+`camera is unavailable` (lowercase, no marks); the dialog now shows
+"Camera is unavailable !!!" per this follow-up order. Update the issue
+text on close if the wording stands.
+Live look (margins, gray tone, right buttons) stays a user-side visual
+gate; layout numbers are static and compiler-checked, not rendered here.

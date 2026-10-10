@@ -53,6 +53,25 @@ public static class ProductionBoot
         }
         tray.QuitRequested += Quit;
         window.QuitRequested += Quit;
+        CameraDialog? dialog = null;
+        host.CameraDialogRequested += canContinue =>
+        {
+            if (dialog is not null)
+            {
+                return;
+            }
+            dialog = new CameraDialog(canContinue);
+            dialog.CloseRequested += Quit;
+            dialog.ContinueRequested += () => host.TryResume();
+            dialog.Closed += (_, _) => dialog = null;
+            dialog.Show();
+        };
+        host.CameraDialogDismissed += () =>
+        {
+            var open = dialog;
+            dialog = null;
+            open?.Hide();
+        };
         tray.Show();
         host.Start(engine.Value.File, engine.Value.Args);
         app.Exit += (_, _) =>
@@ -88,14 +107,16 @@ public static class ProductionBoot
 
     /// <summary>Resolve which engine to launch: explicit env override wins
     /// (dev), else the side-by-side frozen bundle with bundled weights when
-    /// present. Null when neither exists.</summary>
+    /// present. Production always runs the engine WITH its preview window
+    /// (owner direction); env overrides may drop it for headless tests.
+    /// Null when neither exists.</summary>
     public static (string File, string Args)? LocateEngine(
         string baseDir, Func<string, string?> getenv)
     {
         var script = getenv("BALDUR_ENGINE_SCRIPT");
         if (script is not null)
         {
-            var args = getenv("BALDUR_ENGINE_ARGS") ?? string.Empty;
+            var args = getenv("BALDUR_ENGINE_ARGS") ?? "--preview";
             var python = getenv("BALDUR_ENGINE_PYTHON") ?? "python";
             return (python, $"\"{script}\" {args}".TrimEnd());
         }
@@ -111,9 +132,9 @@ public static class ProductionBoot
             var weights = Path.Combine(baseDir, "engine", weightsDir, "yolo26n-pose.pt");
             if (File.Exists(weights))
             {
-                return (frozen, $"--model \"{weights}\"");
+                return (frozen, $"--model \"{weights}\" --preview");
             }
         }
-        return (frozen, string.Empty);
+        return (frozen, "--preview");
     }
 }

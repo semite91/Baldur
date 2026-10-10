@@ -162,3 +162,32 @@ public sealed class WarningControllerTests
         Assert.Equal(0, view.Hides);
     }
 }
+
+public sealed class EngineEventTests
+{
+    [Fact]
+    public void ErrorLineParsesCode()
+    {
+        Assert.True(EngineEvent.TryParse(
+            """{"event": "error", "code": "CAMERA_UNAVAILABLE", "message": "x"}""",
+            out var parsed));
+        Assert.NotNull(parsed);
+        Assert.Equal("error", parsed.Name);
+        Assert.Equal("CAMERA_UNAVAILABLE", parsed.Code);
+    }
+
+    [Fact]
+    public void HeartbeatCarriesNoCode()
+    {
+        Assert.True(EngineEvent.TryParse(
+            """{"event": "heartbeat", "score": 78}""", out var parsed));
+        Assert.NotNull(parsed);
+        Assert.Null(parsed.Code);
+    }
+
+    [Fact]
+    public void MalformedLineStillRejected()
+    {
+        Assert.False(EngineEvent.TryParse("this is not json{{{", out _));
+    }
+}

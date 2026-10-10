@@ -19,9 +19,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default="count",
                         choices=("count", "script", "malformed", "infinite", "spam",
-                                 "cycle", "die-after"))
+                                 "cycle", "die-after", "error"))
     parser.add_argument("--count", type=int, default=10)
     parser.add_argument("--interval", type=float, default=0.1)
+    parser.add_argument("--code", default="CAMERA_UNAVAILABLE")
+    parser.add_argument("--heartbeats", type=int, default=0)
     args = parser.parse_args()
 
     if args.mode == "count":
@@ -59,6 +61,12 @@ def main():
         for _ in range(args.count):
             emit("heartbeat", score=78)
             time.sleep(args.interval)
+        sys.exit(1)
+    elif args.mode == "error":
+        for _ in range(args.heartbeats):
+            emit("heartbeat", score=78)
+            time.sleep(args.interval)
+        emit("error", code=args.code, message="simulated engine fault")
         sys.exit(1)
     else:
         while True:

@@ -134,6 +134,128 @@ public sealed class AppHostTests
         Assert.False(blocker.IsHookInstalled);
     }
 
+    [Theory]
+    [InlineData("heartbeat", true)]
+    [InlineData("bad_posture", true)]
+    [InlineData("recovered", true)]
+    [InlineData("error", false)]
+    public void SignOfLifeMatrix(string name, bool expected)
+    {
+        Assert.Equal(expected, AppHost.IsSignOfLife(name));
+    }
+
+    [Fact]
+    public void StartupCameraErrorRequestsDialogWithoutContinue()
+    {
+        var view = new FakeView();
+        bool? canContinue = null;
+        var requests = 0;
+        using var host = new AppHost(new EngineHost(), view, new MouseBlocker(blockingEnabled: false));
+        host.CameraDialogRequested += can =>
+        {
+            canContinue = can;
+            requests++;
+        };
+        host.Start("python", $"\"{FakePath()}\" --mode error --code CAMERA_UNAVAILABLE");
+        Assert.True(SpinWait.SpinUntil(() => requests > 0, TimeSpan.FromSeconds(30)));
+        Assert.False(canContinue);
+        Assert.Empty(view.Errors);
+    }
+
+    [Fact]
+    public void MidRunCameraErrorRequestsDialogWithContinue()
+    {
+        var view = new FakeView();
+        bool? canContinue = null;
+        var requests = 0;
+        using var host = new AppHost(new EngineHost(), view, new MouseBlocker(blockingEnabled: false));
+        host.CameraDialogRequested += can =>
+        {
+            canContinue = can;
+            requests++;
+        };
+        host.Start("python", $"\"{FakePath()}\" --mode error --code FRAME_READ_FAILED --heartbeats 3");
+        Assert.True(SpinWait.SpinUntil(() => requests > 0, TimeSpan.FromSeconds(30)));
+        Assert.True(canContinue);
+        Assert.Empty(view.Errors);
+    }
+
+    [Fact]
+    public void NonCameraDeathKeepsFullscreenErrorWithoutDialog()
+    {
+        var view = new FakeView();
+        var requests = 0;
+        using var host = new AppHost(new EngineHost(), view, new MouseBlocker(blockingEnabled: false));
+        host.CameraDialogRequested += _ => requests++;
+        host.Start("python", $"\"{FakePath()}\" --mode die-after --count 3");
+        Assert.True(SpinWait.SpinUntil(() => view.Errors.Count > 0, TimeSpan.FromSeconds(30)));
+        Thread.Sleep(1000);
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public void TryResumeRelaunchesDeadEngine()
+    {
+        var view = new FakeView();
+        var requests = 0;
+        using var host = new AppHost(new EngineHost(), view, new MouseBlocker(blockingEnabled: false));
+        host.CameraDialogRequested += _ => requests++;
+        host.Start("python", $"\"{FakePath()}\" --mode error --code CAMERA_UNAVAILABLE");
+        Assert.True(SpinWait.SpinUntil(() => requests > 0, TimeSpan.FromSeconds(30)));
+        Thread.Sleep(3000);
+        Assert.Equal(0, host.EngineProcessId);
+        Assert.True(host.TryResume());
+        Assert.True(SpinWait.SpinUntil(() => requests > 1, TimeSpan.FromSeconds(30)));
+    }
+
+    [Fact]
+    public void TryResumeWithFailingProbeDoesNotRelaunch()
+    {
+        var view = new FakeView();
+        var requests = 0;
+        var probes = 0;
+        using var host = new AppHost(
+            new EngineHost(), view, new MouseBlocker(blockingEnabled: false),
+            probeFile: "probe", probeArgs: "--probe",
+            probeRunner: (_, _) => { Interlocked.Increment(ref probes); return 2; });
+        host.CameraDialogRequested += _ => requests++;
+        host.Start("python", $"\"{FakePath()}\" --mode error --code CAMERA_UNAVAILABLE");
+        Assert.True(SpinWait.SpinUntil(() => requests > 0, TimeSpan.FromSeconds(30)));
+        Thread.Sleep(3000);
+        Assert.Equal(0, host.EngineProcessId);
+        Assert.True(host.TryResume());
+        Thread.Sleep(2000);
+        Assert.Equal(1, probes);
+        Assert.Equal(1, requests);
+        Assert.Equal(0, host.EngineProcessId);
+    }
+
+    [Fact]
+    public void TryResumeWithPassingProbeRelaunches()
+    {
+        var view = new FakeView();
+        var requests = 0;
+        using var host = new AppHost(
+            new EngineHost(), view, new MouseBlocker(blockingEnabled: false),
+            probeFile: "probe", probeArgs: "--probe",
+            probeRunner: (_, _) => 0);
+        host.CameraDialogRequested += _ => requests++;
+        host.Start("python", $"\"{FakePath()}\" --mode error --code CAMERA_UNAVAILABLE");
+        Assert.True(SpinWait.SpinUntil(() => requests > 0, TimeSpan.FromSeconds(30)));
+        Thread.Sleep(3000);
+        Assert.Equal(0, host.EngineProcessId);
+        Assert.True(host.TryResume());
+        Assert.True(SpinWait.SpinUntil(() => requests > 1, TimeSpan.FromSeconds(30)));
+    }
+
+    [Fact]
+    public void TryResumeBeforeStartReturnsFalse()
+    {
+        var view = new FakeView();
+        using var host = new AppHost(new EngineHost(), view, new MouseBlocker(blockingEnabled: false));
+        Assert.False(host.TryResume());
+    }
+
     private sealed class ThrowingView : IWarningView
     {
         public int HideCalls { get; private set; }

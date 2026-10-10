@@ -4,7 +4,7 @@
         Title="Baldur"
         WindowState="Maximized" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" ShowInTaskbar="False" Background="Black"
-        Icon="pack://application:,,,/Warning;component/Assets/Baldur.png"
+        Icon="pack://application:,,,/Baldur;component/Assets/Baldur.png"
         KeyDown="OnKeyDown">
     <Grid>
         <Grid.RowDefinitions>
@@ -16,7 +16,7 @@
                    Text="STAND TALL!!!" Foreground="Red" FontSize="72"
                    FontWeight="Bold" HorizontalAlignment="Center" Margin="0,40,0,0"/>
         <Image x:Name="PostureImage" x:FieldModifier="public" Grid.Row="1"
-               Source="pack://application:,,,/Warning;component/Assets/kyphosis.jpg" Stretch="Uniform"
+               Source="pack://application:,,,/Baldur;component/Assets/kyphosis.jpg" Stretch="Uniform"
                HorizontalAlignment="Center" VerticalAlignment="Center"/>
         <TextBlock x:Name="EscHint" x:FieldModifier="public" Grid.Row="2"
                    Text="Press ESC to dismiss" Foreground="White" FontSize="24"

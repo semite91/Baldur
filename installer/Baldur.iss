@@ -1,11 +1,11 @@
-; Baldur 1.0.0 installer (Inno Setup 6).
+; Baldur 1.0.1 installer (Inno Setup 6).
 ; Per-user install, no admin rights required. Bundles the self-contained
 ; Warning app plus the frozen Recognition engine (Python embedded).
 ; Unsigned build: SmartScreen/Defender warnings on first install are
 ; expected until a code-signing certificate is procured (see #11).
 
 #define MyAppName "Baldur"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "Baldur"
 #define MyAppExeName "Baldur.exe"
 
@@ -17,7 +17,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 PrivilegesRequired=lowest
 OutputDir=B:\baldur-dist
-OutputBaseFilename=BaldurSetup-1.0.0
+OutputBaseFilename=BaldurSetup-1.0.1
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -27,6 +27,8 @@ UninstallDisplayName={#MyAppName} {#MyAppVersion}
 
 [Files]
 Source: "B:\baldur-publish\warning\Baldur.exe"; DestDir: "{app}\Baldur"; Flags: ignoreversion
+; Single-file WPF still needs its native companions beside the exe.
+Source: "B:\baldur-publish\warning\*_cor3.dll"; DestDir: "{app}\Baldur"; Flags: ignoreversion
 Source: "B:\baldur-dist\engine\*"; DestDir: "{app}\Baldur\engine"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Baldur.Warning;
 
 /// <summary>One frozen JSON line from the engine: bad_posture, recovered, heartbeat or error.</summary>
-public sealed record EngineEvent(string Name, string RawLine, DateTimeOffset ReceivedAt)
+public sealed record EngineEvent(string Name, string RawLine, DateTimeOffset ReceivedAt, string? Code = null)
 {
     private static readonly HashSet<string> FrozenNames = new(StringComparer.Ordinal)
     {
@@ -30,7 +30,13 @@ public sealed record EngineEvent(string Name, string RawLine, DateTimeOffset Rec
             {
                 return false;
             }
-            parsed = new EngineEvent(eventName, line, DateTimeOffset.UtcNow);
+            string? code = null;
+            if (document.RootElement.TryGetProperty("code", out var codeProp) &&
+                codeProp.ValueKind == JsonValueKind.String)
+            {
+                code = codeProp.GetString();
+            }
+            parsed = new EngineEvent(eventName, line, DateTimeOffset.UtcNow, code);
             return true;
         }
         catch (JsonException)

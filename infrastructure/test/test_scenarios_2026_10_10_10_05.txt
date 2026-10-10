@@ -1,0 +1,37 @@
+TEST SCENARIOS - #18 camera availability dialogs (owner loop, approved plan)
+Decisions: new small WPF dialog (normal chrome, centered); Continue =
+probe-then-decide (fast --probe first, relaunch only if present, probe
+on a background thread so the UI never freezes, double-press guarded).
+Close reuses the boot Quit path everywhere. Fullscreen red modal stays
+reserved for bad_posture; camera popups never use it.
+EngineEvent gains the parsed error code (camera vs inference codes).
+Startup vs mid-run split: heartbeat/score ever observed means the
+engine lived (mid-run dialog), error-only history means it never lived
+(startup dialog, no Continue).
+Manual confirm: approved in-chat before build.
+
+SCENARIOS:
+C1. engine.py --probe with working camera: exit 0, stdout empty,
+    camera released. Failing camera: single frozen error event on
+    stdout, non-zero exit. Loads the 00 namespace only (fast, no
+    model/torch import).
+C2. EngineEvent carries Code: error lines parse code + message;
+    non-error events carry no code; malformed lines still rejected.
+C3. Startup case: camera-coded error with no prior heartbeat/score ->
+    startup dialog (message `camera is unavailable`, Close only).
+    Close quits completely (no tray ghost, no child left).
+C4. Mid-run case: camera-coded error after observed life -> mid-run
+    dialog (same message, Close + Continue). Close quits completely.
+C5. Continue with camera present: probe exit 0 -> engine relaunched
+    exactly once; first heartbeat dismisses the dialog and watching
+    resumes; double-press cannot double-launch (guard).
+C6. Continue without camera: probe non-zero -> dialog stays, no
+    relaunch, no spin, no error storm on repeated presses.
+C7. Non-camera engine death (e.g. inference code) keeps the OLD path
+    (fullscreen error display, restart-once) - no dialog.
+C8. Regression: bad_posture modal show/hide, ESC quit, ENTER hide,
+    tray quit all unchanged (existing suites stay green).
+C9. LIVE (user-side, camera machine): unplug at startup -> small
+    dialog + Close quits; unplug mid-run -> dialog, replug, Continue
+    resumes; Continue while unplugged does nothing; X button quits
+    like Close; ESC quits per key map.

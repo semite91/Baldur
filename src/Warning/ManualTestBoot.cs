@@ -53,6 +53,25 @@ public static class ManualTestBoot
         }
         tray.QuitRequested += Quit;
         window.QuitRequested += Quit;
+        CameraDialog? dialog = null;
+        host.CameraDialogRequested += canContinue =>
+        {
+            if (dialog is not null)
+            {
+                return;
+            }
+            dialog = new CameraDialog(canContinue);
+            dialog.CloseRequested += Quit;
+            dialog.ContinueRequested += () => host.TryResume();
+            dialog.Closed += (_, _) => dialog = null;
+            dialog.Show();
+        };
+        host.CameraDialogDismissed += () =>
+        {
+            var open = dialog;
+            dialog = null;
+            open?.Hide();
+        };
         tray.Show();
         host.Start(enginePython, engineArguments);
         app.Exit += (_, _) =>

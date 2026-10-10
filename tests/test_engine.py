@@ -531,3 +531,48 @@ def test_preview_unsupported_property_keeps_running(monkeypatch, capsys):
     assert code == engine.EXIT_OK == 0
     assert cv2stub.calls == 3
     assert capsys.readouterr().out == ""
+
+
+# C1 (--probe, issue #18): fast camera check, 00 namespace only.
+
+
+def test_probe_success_is_silent_and_releases(capsys):
+    capture = blank_capture()
+    code = engine.probe_camera(capture_factory=lambda source: capture)
+    assert code == engine.EXIT_OK == 0
+    assert capture.released is True
+    assert capsys.readouterr().out == ""
+
+
+def test_probe_denied_camera_single_error_exit_2(capsys):
+    capture = FakeCapture(opened=False)
+    code = engine.probe_camera(capture_factory=lambda source: capture)
+    assert code == engine.EXIT_CAMERA == 2
+    assert capture.released is True
+    events = stdout_events(capsys)
+    assert len(events) == 1
+    assert events[0]["event"] == "error"
+    assert events[0]["code"] == "CAMERA_UNAVAILABLE"
+
+
+def test_probe_read_failure_single_error_exit_2(capsys):
+    capture = FakeCapture(opened=True, frame=None)
+    code = engine.probe_camera(capture_factory=lambda source: capture)
+    assert code == engine.EXIT_CAMERA == 2
+    assert capture.released is True
+    events = stdout_events(capsys)
+    assert len(events) == 1
+    assert events[0]["event"] == "error"
+    assert events[0]["code"] == "FRAME_READ_FAILED"
+
+
+def test_probe_main_flag_plumbs_source(monkeypatch):
+    seen = []
+
+    def fake_probe(source=0, capture_factory=None, notebooks_dir=None):
+        seen.append(source)
+        return engine.EXIT_OK
+
+    monkeypatch.setattr(engine, "probe_camera", fake_probe)
+    assert engine.main(["--probe", "--source", "3"]) == engine.EXIT_OK
+    assert seen == [3]

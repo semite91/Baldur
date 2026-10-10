@@ -96,6 +96,37 @@ def _preview_frame(viewer, base, width, height, person, state, extra, plotted):
     return visible < 1
 
 
+def probe_camera(source=0, capture_factory=None, notebooks_dir=None):
+    """Fast camera check for the Continue button: load ONLY the 00 camera
+    namespace (no model, no torch import), open the camera, read one frame,
+    release. EXIT_OK silent on success; single frozen error event plus
+    EXIT_CAMERA when the camera cannot be opened or read."""
+    try:
+        cam = _load_namespaces(("00_env_camera",), notebooks_dir)["00_env_camera"]
+    except Exception as exc:
+        print(f"engine: probe namespaces unavailable ({exc})",
+              file=sys.stderr, flush=True)
+        return EXIT_ENGINE
+    try:
+        if capture_factory is None:
+            cap = cam["open_camera"](source=source)
+        else:
+            cap = cam["open_camera"](source=source, open_capture=capture_factory)
+    except Exception as exc:
+        cam["emit_error"](getattr(exc, "code", "CAMERA_UNAVAILABLE"),
+                          str(exc) or type(exc).__name__)
+        return EXIT_CAMERA
+    try:
+        cam["read_frame"](cap)
+    except Exception as exc:
+        cam["emit_error"](getattr(exc, "code", "FRAME_READ_FAILED"),
+                          str(exc) or type(exc).__name__)
+        return EXIT_CAMERA
+    finally:
+        cam["release_camera"](cap)
+    return EXIT_OK
+
+
 def run(source=0, model_path=None, model_fallbacks=None, frames=None,
         capture_factory=None, model=None, dt=None, preview=False):
     """Run the recognition loop; return a process exit code.
@@ -245,7 +276,11 @@ def main(argv=None):
                         help="stop after N frames (default: run until Ctrl+C)")
     parser.add_argument("--preview", action="store_true",
                         help="show the local camera/score window (q quits)")
+    parser.add_argument("--probe", action="store_true",
+                        help="check camera availability only: exit 0 silent when a frame reads, else one frozen error plus non-zero exit (no model load)")
     args = parser.parse_args(argv)
+    if args.probe:
+        return probe_camera(source=args.source)
     return run(source=args.source, model_path=args.model,
                model_fallbacks=args.fallbacks, frames=args.frames,
                preview=args.preview)

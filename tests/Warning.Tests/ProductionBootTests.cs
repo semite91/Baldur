@@ -56,7 +56,7 @@ public sealed class ProductionBootTests
         var located = ProductionBoot.LocateEngine(dir, name => Lookup(env, name));
         Assert.NotNull(located);
         Assert.Equal("python", located.Value.File);
-        Assert.Equal(@"""C:\dev\engine.py""", located.Value.Args);
+        Assert.Equal(@"""C:\dev\engine.py"" --preview", located.Value.Args);
     }
 
     [Fact]
@@ -72,6 +72,7 @@ public sealed class ProductionBootTests
         Assert.EndsWith(Path.Combine("engine", "engine.exe"), located.Value.File);
         Assert.Contains("yolo26n-pose.pt", located.Value.Args);
         Assert.StartsWith("--model", located.Value.Args);
+        Assert.Contains("--preview", located.Value.Args);
     }
 
     [Fact]
@@ -82,7 +83,7 @@ public sealed class ProductionBootTests
         File.WriteAllText(Path.Combine(dir, "engine", "engine.exe"), "x");
         var located = ProductionBoot.LocateEngine(dir, _ => null);
         Assert.NotNull(located);
-        Assert.Equal(string.Empty, located.Value.Args);
+        Assert.Equal("--preview", located.Value.Args);
     }
 
     [Fact]
@@ -96,6 +97,7 @@ public sealed class ProductionBootTests
         Assert.NotNull(located);
         Assert.Contains("_internal", located.Value.Args);
         Assert.Contains("yolo26n-pose.pt", located.Value.Args);
+        Assert.Contains("--preview", located.Value.Args);
     }
 
     [Fact]

@@ -20,8 +20,32 @@ public sealed class AppHost : IDisposable
     private bool _disposed;
     private bool _started;
     private bool _deadNotified;
+    private bool _sawLife;
+    private bool _cameraErrorSeen;
+    private bool _cameraNotified;
+    private bool _dialogOpen;
+    private bool _resuming;
+    private readonly string? _probeFile;
+    private readonly string? _probeArgs;
+    private readonly Func<string, string, int> _probeRunner;
 
-    public AppHost(EngineHost engine, IWarningView view, MouseBlocker blocker)
+    private static readonly HashSet<string> CameraCodes = new(StringComparer.Ordinal)
+    {
+        "CAMERA_UNAVAILABLE", "FRAME_READ_FAILED",
+    };
+
+    public event Action<bool>? CameraDialogRequested;
+
+    public event Action? CameraDialogDismissed;
+
+    /// <summary>Life signs that dismiss a camera dialog: any event proving
+    /// the engine watches again. Unit-tested directly.</summary>
+    public static bool IsSignOfLife(string name) =>
+        name is "heartbeat" or "bad_posture" or "recovered";
+
+    public AppHost(EngineHost engine, IWarningView view, MouseBlocker blocker,
+        string? probeFile = null, string? probeArgs = null,
+        Func<string, string, int>? probeRunner = null)
     {
         _engine = engine;
         _view = view;
@@ -29,6 +53,9 @@ public sealed class AppHost : IDisposable
         _controller = new WarningController(view);
         _ui = (view as System.Windows.Threading.DispatcherObject)?.Dispatcher;
         _view.DismissRequested += OnEscapeDismiss;
+        _probeFile = probeFile;
+        _probeArgs = probeArgs;
+        _probeRunner = probeRunner ?? RunProbeProcess;
     }
 
     public void Start(string fileName, string arguments)
@@ -56,6 +83,107 @@ public sealed class AppHost : IDisposable
     }
 
     public int EngineProcessId => _engine.ProcessId;
+
+    /// <summary>Continue after a camera dialog: probe first (when a probe
+    /// is configured), relaunch the engine only when a camera answers.
+    /// Safe to press repeatedly: at most one probe/relaunch is ever in
+    /// flight. Returns false when there is nothing to resume.</summary>
+    public bool TryResume()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_started || _quitRequested || _resuming)
+        {
+            return false;
+        }
+        if (_engine.ProcessId != 0)
+        {
+            return true;
+        }
+        _resuming = true;
+        _restartAttempted = true;
+        _deadNotified = false;
+        _cameraNotified = false;
+        if (_probeFile is null)
+        {
+            return ResumeNow();
+        }
+        var file = _probeFile;
+        var args = _probeArgs ?? string.Empty;
+        var runner = _probeRunner;
+        Log("continue pressed -> probing camera");
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            int code;
+            try
+            {
+                code = runner(file, args);
+            }
+            catch
+            {
+                code = 2;
+            }
+            if (code == 0)
+            {
+                ResumeNow();
+            }
+            else
+            {
+                Log("probe found no camera; staying parked");
+                _resuming = false;
+            }
+        });
+        return true;
+    }
+
+    private bool ResumeNow()
+    {
+        try
+        {
+            StartEngine(_fileName, _arguments);
+        }
+        catch (Exception)
+        {
+            _resuming = false;
+            return false;
+        }
+        return true;
+    }
+
+    private static int RunProbeProcess(string file, string args)
+    {
+        try
+        {
+            using var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = file,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                },
+            };
+            process.Start();
+            if (!process.WaitForExit(20000))
+            {
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch (InvalidOperationException)
+                {
+                }
+                return 2;
+            }
+            return process.ExitCode;
+        }
+        catch
+        {
+            return 2;
+        }
+    }
 
     public void CheckWatchdog(DateTimeOffset now)
     {
@@ -88,11 +216,13 @@ public sealed class AppHost : IDisposable
     private void OnEngineEvent(EngineEvent e)
     {
         Log($"rx {e.Name}");
+        _resuming = false;
         Marshal(() =>
         {
             try
             {
                 _deadNotified = false;
+                NoteSignOfLife(e);
                 HandleEvent(e);
             }
             catch (Exception)
@@ -117,14 +247,50 @@ public sealed class AppHost : IDisposable
         }
         else if (e.Name == "error")
         {
-            _view.ShowError("Engine reported an error. Posture watch is paused.");
             _blocker.Stop();
+            if (e.Code is not null && CameraCodes.Contains(e.Code))
+            {
+                _cameraErrorSeen = true;
+                RequestCameraDialog();
+            }
+            else
+            {
+                _view.ShowError("Engine reported an error. Posture watch is paused.");
+            }
         }
+    }
+
+    private void NoteSignOfLife(EngineEvent e)
+    {
+        if (!IsSignOfLife(e.Name))
+        {
+            return;
+        }
+        _sawLife = true;
+        if (_dialogOpen)
+        {
+            _dialogOpen = false;
+            Log("watching resumed -> hide camera dialog");
+            CameraDialogDismissed?.Invoke();
+        }
+    }
+
+    private void RequestCameraDialog()
+    {
+        if (_disposed || _cameraNotified)
+        {
+            return;
+        }
+        _cameraNotified = true;
+        _dialogOpen = true;
+        Log($"camera dialog requested (canContinue={_sawLife})");
+        CameraDialogRequested?.Invoke(_sawLife);
     }
 
     private void OnEngineExited()
     {
         Log("engine process exited");
+        _resuming = false;
         if (_quitRequested)
         {
             return;
@@ -144,7 +310,14 @@ public sealed class AppHost : IDisposable
         }
         Marshal(() =>
         {
-            _view.ShowError("Engine stopped. Posture watch is paused.");
+            if (_cameraErrorSeen)
+            {
+                RequestCameraDialog();
+            }
+            else
+            {
+                _view.ShowError("Engine stopped. Posture watch is paused.");
+            }
             _blocker.Stop();
         });
     }
